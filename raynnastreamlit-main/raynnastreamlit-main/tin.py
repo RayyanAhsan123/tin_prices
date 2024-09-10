@@ -33,17 +33,18 @@ def fetch_data(start_date, end_date):
         }
         response = requests.get(f"{base_url}/timeseries", params=params)
 
+        # Added response text logging to inspect the API response
+        st.write(response.text)
+
         if response.status_code == 200:
             data = response.json()
             if data.get('success', False):
                 all_data.update(data.get("rates", {}))
             else:
-                st.error(f"API request failed: {data.get('error', {}).get('code')} - {data.get('error', {}).get('info')}")
-                st.write(response.text)  # Inspect API response
+                st.error(f"API request failed: {data.get('error', {}).get('info')}")
                 break
         else:
-            st.error(f"Error fetching data: {response.status_code}. Response: {response.text}")
-            st.write(response.text)  # Inspect API response
+            st.error(f"Error fetching data: {response.status_code}")
             break
 
         start_date = current_end_date + timedelta(days=1)  # Move to the next chunk
@@ -61,8 +62,8 @@ with st.sidebar:
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
 
-    # Updated starting date to a more recent date
-    start_date = st.date_input("Start Date", datetime(2023, 1, 1))  # Set to January 1, 2023 for easier data fetch
+    # Set start date to August 1, 2024, and adjust the end date
+    start_date = datetime(2024, 8, 1)
 
     # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["6 Months", "3 Months", "3 Weeks", "1 Week"])
@@ -106,7 +107,6 @@ if data:
     st.subheader("📈 Tin Price Over Time")
     st.line_chart(df.set_index('ds')['y'])
 
-
     # Prophet model training and forecasting
     st.subheader("🔮 Prophet Forecast")
     model = Prophet(
@@ -126,11 +126,6 @@ if data:
     st.subheader("📉 Model Performance Metrics")
     df_cv = cross_validation(model, initial='14 days', period='7 days', horizon='7 days')
     df_performance = performance_metrics(df_cv)
-
-    # Convert timedelta columns to string
-    for col in df_performance.select_dtypes(include=['timedelta']).columns:
-        df_performance[col] = df_performance[col].astype(str)
-
     st.write(df_performance)
 
     # Get user input for a specific prediction date
