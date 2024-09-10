@@ -7,7 +7,7 @@ from prophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller 
+from statsmodels.tsa.stattools import adfuller
 from datetime import datetime, timedelta
 
 # Set up your API and base URL for fetching data
@@ -38,10 +38,10 @@ def fetch_data(start_date, end_date):
             if data.get('success', False):
                 all_data.update(data.get("rates", {}))
             else:
-                st.error(f"API request failed: {data.get('error', {}).get('info')}")
+                st.error(f"API request failed: {data.get('error', {}).get('code')} - {data.get('error', {}).get('info')}")
                 break
         else:
-            st.error(f"Error fetching data: {response.status_code}")
+            st.error(f"Error fetching data: {response.status_code}. Response: {response.text}")
             break
 
         start_date = current_end_date + timedelta(days=1)  # Move to the next chunk
@@ -103,7 +103,6 @@ if data:
     # Plot the data
     st.subheader("📈 Tin Price Over Time")
     st.line_chart(df.set_index('ds')['y'])
-
 
     # Prophet model training and forecasting
     st.subheader("🔮 Prophet Forecast")
