@@ -11,10 +11,10 @@ from statsmodels.tsa.stattools import adfuller
 from datetime import datetime, timedelta
 
 # Set up your API and base URL for fetching data
-api_key = "l333ljg4122qws9kxkb4hly7a8dje27vk46c7zkceih11wmnrj7lqreku176"
+api_key = "your_valid_api_key_here"
 base_url = "https://metals-api.com/api"
 
-# Function to fetch data for a given timeframe, splitting into chunks of 365 days
+# Function to fetch data for a given timeframe, splitting into chunks of 15 days
 def fetch_data(start_date, end_date):
     date_format = "%Y-%m-%d"
     start_date = datetime.strptime(start_date, date_format)
@@ -22,9 +22,9 @@ def fetch_data(start_date, end_date):
 
     all_data = {}
 
-    # Fetch data in smaller chunks, e.g., 30 days
+    # Fetch data in smaller chunks, e.g., 15 days
     while start_date <= end_date:
-        current_end_date = min(start_date + timedelta(days=30), end_date)  # 30-day chunk
+        current_end_date = min(start_date + timedelta(days=15), end_date)  # 15-day chunk
         params = {
             "access_key": api_key,
             "base": "USD",
@@ -63,21 +63,21 @@ with st.sidebar:
     st.info("Select a start date to fetch data and predict future tin prices.")
 
     # User input for start date
-    start_date = st.date_input("Start Date", datetime(2024, 8, 1))  # Updated to 2024-08-01
+    start_date = st.date_input("Start Date", datetime(2024, 8, 1))
 
     # User input for prediction period
-    prediction_period = st.selectbox("Select Prediction Period", ["6 Months", "3 Months", "3 Weeks", "1 Week"])
+    prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "3 Months", "6 Months"])
 
     # Calculate the end date based on selected prediction period
     if prediction_period == "1 Week":
-        end_date = start_date + timedelta(weeks=1)# Approximate 6 months
-   # Approximate 3 months
+        end_date = start_date + timedelta(weeks=1)
     elif prediction_period == "3 Weeks":
         end_date = start_date + timedelta(weeks=3)
     elif prediction_period == "3 Months":
-        end_date = start_date + timedelta(days=3 * 30)  
+        end_date = start_date + timedelta(days=3 * 30)
     elif prediction_period == "6 Months":
-        end_date = start_date + timedelta(days=6 * 30) 
+        end_date = start_date + timedelta(days=6 * 30)
+
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
 # Convert dates to strings for API
@@ -101,7 +101,7 @@ if data:
 
     # Display data
     st.subheader("📊 Fetched Data")
-    st.write(df.head(30))  # Display the data in the UI
+    st.write(df.head(30))
 
     # Plot the data
     st.subheader("📈 Tin Price Over Time")
