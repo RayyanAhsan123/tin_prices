@@ -7,7 +7,7 @@ from prophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller 
+from statsmodels.tsa.stattools import adfuller
 from datetime import datetime, timedelta
 
 # Set up your API and base URL for fetching data
@@ -59,8 +59,8 @@ with st.sidebar:
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
 
-    # User input for start date
-    start_date = st.date_input("Start Date", datetime(2023, 7, 1))  # Default to a realistic date
+    # User input for start date (Updated to 2024-08-01)
+    start_date = st.date_input("Start Date", datetime(2024, 8, 1))  # Default to 2024-08-01
 
     # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["6 Months", "3 Months", "3 Weeks", "1 Week"])
@@ -119,17 +119,24 @@ if data:
     fig1 = model.plot(forecast)
     st.pyplot(fig1)
 
-    # Cross-validation with reduced horizon and initial window if necessary
+    # Cross-validation with adjusted horizon and initial window based on data size
     st.subheader("📉 Model Performance Metrics")
-    if len(df) >= 30:  # Check if we have enough data for validation
+    data_length = len(df)
+
+    if data_length >= 30:  # Ensure there's enough data for cross-validation
+        # Dynamically calculate initial and period based on data length
         try:
-            df_cv = cross_validation(model, initial='7 days', period='3 days', horizon='3 days')
+            initial_days = max(7, data_length // 4)  # At least 7 days, or a quarter of the data
+            period_days = max(3, data_length // 10)  # At least 3 days, or a tenth of the data
+            horizon_days = max(3, data_length // 10)  # At least 3 days, or a tenth of the data
+
+            df_cv = cross_validation(model, initial=f'{initial_days} days', period=f'{period_days} days', horizon=f'{horizon_days} days')
             df_performance = performance_metrics(df_cv)
             st.write(df_performance)
         except ValueError as e:
             st.warning(f"Cross-validation error: {e}")
     else:
-        st.write("Not enough data to perform cross-validation.")
+        st.write(f"Not enough data to perform cross-validation. You need at least 30 data points, but you have {data_length}.")
 
     # Get user input for a specific prediction date
     st.subheader("📅 Predict Tin Price for a Specific Date")
@@ -175,3 +182,26 @@ if data:
         st.write("The time series is not stationary. ARIMA might not provide reliable predictions.")
 else:
     st.write("⚠️ No data fetched. Please check the date range or API details.")
+
+# Custom CSS for styling
+st.markdown("""
+    <style>
+        .css-18e3th9 {
+            padding: 1.5rem 1rem;
+        }
+        .stButton > button {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 1rem;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+        }
+        .css-1v0mbdj {
+            display: flex;
+            justify-content: center;
+        }
+        .css-1adrfps {
+            color: #FF6347;
+        }
+    </style>
+    """, unsafe_allow_html=True)
