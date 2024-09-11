@@ -11,7 +11,7 @@ from statsmodels.tsa.stattools import adfuller
 from datetime import datetime, timedelta
 
 # Set up your API and base URL for fetching data
-api_key = "your_valid_api_key_here"
+api_key = "l333ljg4122qws9kxkb4hly7a8dje27vk46c7zkceih11wmnrj7lqreku17"
 base_url = "https://metals-api.com/api"
 
 # Function to fetch data for a given timeframe, splitting into chunks of 15 days
