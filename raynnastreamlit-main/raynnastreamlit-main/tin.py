@@ -7,7 +7,7 @@ from prophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller 
+from statsmodels.tsa.stattools import adfuller
 from datetime import datetime, timedelta
 
 # Set up your API and base URL for fetching data
@@ -32,9 +32,6 @@ def fetch_data(start_date, end_date):
             "end_date": current_end_date.strftime(date_format)
         }
         response = requests.get(f"{base_url}/timeseries", params=params)
-
-        # Added response text logging to inspect the API response
-        st.write(response.text)
 
         if response.status_code == 200:
             data = response.json()
@@ -62,8 +59,8 @@ with st.sidebar:
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
 
-    # Set start date to August 1, 2024, and adjust the end date
-    start_date = datetime(2024, 8, 1)
+    # User input for start date
+    start_date = st.date_input("Start Date", datetime(2023, 8, 1))  # Default to a realistic date
 
     # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["6 Months", "3 Months", "3 Weeks", "1 Week"])
@@ -106,6 +103,7 @@ if data:
     # Plot the data
     st.subheader("📈 Tin Price Over Time")
     st.line_chart(df.set_index('ds')['y'])
+
 
     # Prophet model training and forecasting
     st.subheader("🔮 Prophet Forecast")
