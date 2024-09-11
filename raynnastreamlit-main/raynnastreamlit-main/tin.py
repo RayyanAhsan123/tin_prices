@@ -125,13 +125,22 @@ if data:
     st.pyplot(fig1)
 
     # Evaluate the model - Cross-validation
-    st.subheader("📉 Model Performance Metrics")
-    try:
-        df_cv = cross_validation(model, initial='7 days', period='1 day', horizon='7 days')
-        df_performance = performance_metrics(df_cv)
-        st.write(df_performance)
-    except ValueError as e:
-        st.warning(f"Not enough data to perform cross-validation: {e}")
+ # Try cross-validation and performance metrics
+st.subheader("📉 Model Performance Metrics")
+try:
+    df_cv = cross_validation(model, initial='7 days', period='1 day', horizon='7 days')
+    df_performance = performance_metrics(df_cv)
+
+    # Drop any problematic columns, such as 'horizon' or other duration columns
+    if 'horizon' in df_performance.columns:
+        df_performance = df_performance.drop(columns=['horizon'])
+
+    st.write(df_performance)
+except ValueError as e:
+    st.warning(f"Not enough data to perform cross-validation: {e}")
+except Exception as e:
+    st.error(f"Error in performance metrics: {e}")
+
 
     # Get user input for a specific prediction date
     st.subheader("📅 Predict Tin Price for a Specific Date")
