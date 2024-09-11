@@ -7,7 +7,7 @@ from prophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.stattools import adfuller 
 from datetime import datetime, timedelta
 
 # Set up your API and base URL for fetching data
@@ -38,11 +38,12 @@ def fetch_data(start_date, end_date):
             if data.get('success', False):
                 all_data.update(data.get("rates", {}))
             else:
-                st.error(f"API request failed: {data.get('error', {}).get('info')}")
-                break
+                error_info = data.get('error', {}).get('info', 'Unknown error')
+                st.error(f"API request failed: {error_info}")
+                return None
         else:
-            st.error(f"Error fetching data: {response.status_code}")
-            break
+            st.error(f"Error fetching data. Status code: {response.status_code}, Response: {response.text}")
+            return None
 
         start_date = current_end_date + timedelta(days=1)  # Move to the next chunk
 
@@ -59,8 +60,8 @@ with st.sidebar:
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
 
-    # User input for start date (Updated to 2024-08-01)
-    start_date = st.date_input("Start Date", datetime(2024, 8, 1))  # Default to 2024-08-01
+    # User input for start date
+    start_date = st.date_input("Start Date", datetime(2024, 8, 1))  # Updated to 2024-08-01
 
     # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["6 Months", "3 Months", "3 Weeks", "1 Week"])
@@ -119,24 +120,14 @@ if data:
     fig1 = model.plot(forecast)
     st.pyplot(fig1)
 
-    # Cross-validation with adjusted horizon and initial window based on data size
+    # Evaluate the model - Cross-validation
     st.subheader("📉 Model Performance Metrics")
-    data_length = len(df)
-
-    if data_length >= 30:  # Ensure there's enough data for cross-validation
-        # Dynamically calculate initial and period based on data length
-        try:
-            initial_days = max(7, data_length // 4)  # At least 7 days, or a quarter of the data
-            period_days = max(3, data_length // 10)  # At least 3 days, or a tenth of the data
-            horizon_days = max(3, data_length // 10)  # At least 3 days, or a tenth of the data
-
-            df_cv = cross_validation(model, initial=f'{initial_days} days', period=f'{period_days} days', horizon=f'{horizon_days} days')
-            df_performance = performance_metrics(df_cv)
-            st.write(df_performance)
-        except ValueError as e:
-            st.warning(f"Cross-validation error: {e}")
-    else:
-        st.write(f"Not enough data to perform cross-validation. You need at least 30 data points, but you have {data_length}.")
+    try:
+        df_cv = cross_validation(model, initial='7 days', period='1 day', horizon='7 days')
+        df_performance = performance_metrics(df_cv)
+        st.write(df_performance)
+    except ValueError as e:
+        st.warning(f"Not enough data to perform cross-validation: {e}")
 
     # Get user input for a specific prediction date
     st.subheader("📅 Predict Tin Price for a Specific Date")
@@ -167,17 +158,17 @@ if data:
         arima_pred = arima_forecast.predicted_mean
 
         # Plot ARIMA forecast
-        plt.figure(figsize=(10, 6))
-        plt.plot(df['ds'], df['y'], label='Historical')
-        plt.plot(pd.date_range(start=df['ds'].iloc[-1], periods=prediction_days + 1, freq='D')[1:], arima_pred,
+        fig2, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(df['ds'], df['y'], label='Historical')
+        ax.plot(pd.date_range(start=df['ds'].iloc[-1], periods=prediction_days + 1, freq='D')[1:], arima_pred,
                  label='ARIMA Forecast')
-        plt.fill_between(pd.date_range(start=df['ds'].iloc[-1], periods=prediction_days + 1, freq='D')[1:],
+        ax.fill_between(pd.date_range(start=df['ds'].iloc[-1], periods=prediction_days + 1, freq='D')[1:],
                          arima_conf_int.iloc[:, 0], arima_conf_int.iloc[:, 1], color='pink', alpha=0.3)
-        plt.legend()
-        plt.title('ARIMA Forecast')
-        plt.xlabel('Date')
-        plt.ylabel('Price')
-        st.pyplot(plt)
+        ax.legend()
+        ax.set_title('ARIMA Forecast')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Price')
+        st.pyplot(fig2)
     else:
         st.write("The time series is not stationary. ARIMA might not provide reliable predictions.")
 else:
