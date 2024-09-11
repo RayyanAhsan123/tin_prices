@@ -22,8 +22,9 @@ def fetch_data(start_date, end_date):
 
     all_data = {}
 
+    # Fetch data in smaller chunks, e.g., 30 days
     while start_date <= end_date:
-        current_end_date = min(start_date + timedelta(days=365), end_date)  # Fetch data in chunks of 365 days
+        current_end_date = min(start_date + timedelta(days=30), end_date)  # 30-day chunk
         params = {
             "access_key": api_key,
             "base": "USD",
@@ -49,6 +50,7 @@ def fetch_data(start_date, end_date):
 
     return all_data if all_data else None
 
+
 # Streamlit App Configuration
 st.set_page_config(page_title="Tin Price Prediction", layout="wide")
 
@@ -67,15 +69,15 @@ with st.sidebar:
     prediction_period = st.selectbox("Select Prediction Period", ["6 Months", "3 Months", "3 Weeks", "1 Week"])
 
     # Calculate the end date based on selected prediction period
-    if prediction_period == "6 Months":
-        end_date = start_date + timedelta(days=6 * 30)  # Approximate 6 months
-    elif prediction_period == "3 Months":
-        end_date = start_date + timedelta(days=3 * 30)  # Approximate 3 months
+    if prediction_period == "1 Week":
+        end_date = start_date + timedelta(weeks=1)# Approximate 6 months
+   # Approximate 3 months
     elif prediction_period == "3 Weeks":
         end_date = start_date + timedelta(weeks=3)
-    elif prediction_period == "1 Week":
-        end_date = start_date + timedelta(weeks=1)
-
+    elif prediction_period == "3 Months":
+        end_date = start_date + timedelta(days=3 * 30)  
+    elif prediction_period == "6 Months":
+        end_date = start_date + timedelta(days=6 * 30) 
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
 # Convert dates to strings for API
