@@ -63,7 +63,7 @@ with st.sidebar:
     
     # Display the current date in the sidebar (Corrected alignment)
     st.markdown(f"### Current Date: {datetime.now().strftime('%Y-%m-%d')}")
-    
+
     # User input for start date
     start_date = st.date_input("Start Date", datetime(2024, 8, 1))
 
@@ -108,6 +108,9 @@ if data:
     st.subheader("📈 Tin Price Over Time")
     st.line_chart(df.set_index('ds')['y'])
 
+    # Calculate the number of days for prediction
+    prediction_days = (end_date - start_date).days
+
     # Prophet model training and forecasting
     st.subheader("🔮 Prophet Forecast")
     model = Prophet(
@@ -117,6 +120,7 @@ if data:
     )
     model.fit(df)
 
+    # Use the calculated number of prediction days
     future = model.make_future_dataframe(periods=prediction_days)
     forecast = model.predict(future)
 
@@ -168,6 +172,7 @@ if data:
         st.write("The time series is not stationary. ARIMA might not provide reliable predictions.")
 else:
     st.write("⚠️ No data fetched. Please check the date range or API details.")
+
 # Custom CSS for styling
 st.markdown("""
     <style>
@@ -190,3 +195,4 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
+
