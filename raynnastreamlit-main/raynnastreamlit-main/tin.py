@@ -82,6 +82,14 @@ with st.sidebar:
 
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
+# Display the current date
+st.subheader("📅 Today's Date")
+current_date = datetime.now().strftime('%Y-%m-%d')
+st.write(f"Today's Date: {current_date}")
+
+# Add a note that the date updates daily
+st.info("The date will update daily.")
+
 # Convert dates to strings for API
 start_date_str = start_date.strftime('%Y-%m-%d')
 end_date_str = end_date.strftime('%Y-%m-%d')
@@ -125,8 +133,7 @@ if data:
     st.pyplot(fig1)
 
     # Evaluate the model - Cross-validation
- # Try cross-validation and performance metrics
-
+    # Try cross-validation and performance metrics
 
     # Get user input for a specific prediction date
     st.subheader("📅 Predict Tin Price for a Specific Date")
