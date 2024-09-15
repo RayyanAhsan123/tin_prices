@@ -53,15 +53,15 @@ def fetch_data(start_date, end_date):
 
 # Streamlit App Configuration
 st.set_page_config(page_title="Tin Price Prediction", layout="wide")
+
 # Sidebar for user inputs
 with st.sidebar:
-    st.image(
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Tin_-_periodic_table.jpg/330px-Tin_-_periodic_table.jpg",
-        width=200)
+    # Add Minexx logo using the provided URL
+    st.image("https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI", width=200)
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
     
-    # Display the current date in the sidebar (Corrected alignment)
+    # Display the current date in the sidebar
     st.markdown(f"### Current Date: {datetime.now().strftime('%Y-%m-%d')}")
 
     # User input for start date
