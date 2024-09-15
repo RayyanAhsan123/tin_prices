@@ -150,7 +150,7 @@ if fetch_button:
         try:
             # Fit the ARIMA model with data, ensuring no missing values
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
-            arima_result = arima_model.fit(maxiter=1000)  # Increased iterations
+            arima_result = arima_model.fit()  # Removed maxiter
 
             # Make ARIMA predictions (used in backend)
             arima_forecast = arima_result.get_forecast(steps=prediction_days)
@@ -161,10 +161,6 @@ if fetch_button:
 
     else:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
-
-# Display Streamlit version
-st.subheader("📦 Streamlit Version")
-st.write(f"Streamlit version: {st.__version__}")
 
 # Custom CSS for styling
 st.markdown("""
@@ -188,4 +184,3 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
-
