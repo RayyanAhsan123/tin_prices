@@ -104,6 +104,9 @@ if fetch_button:
         df = df.reset_index().rename(columns={"index": "ds", "TIN": "y"})
         df = df[["ds", "y"]]
 
+        # Handle missing values by filling with the mean or interpolation
+        df['y'] = df['y'].fillna(method='ffill')
+
         # Display data
         st.subheader("📊 Fetched Data")
         st.write(df.head(30))
@@ -144,13 +147,18 @@ if fetch_button:
                 st.error(f"Error predicting price: {e}")
 
         # ARIMA Model evaluation in the background without displaying results
-        arima_model = ARIMA(df['y'], order=(5, 1, 0))
-        arima_result = arima_model.fit(maxiter=1000)  # Increased iterations
+        try:
+            # Fit the ARIMA model with data, ensuring no missing values
+            arima_model = ARIMA(df['y'], order=(5, 1, 0))
+            arima_result = arima_model.fit(maxiter=1000)  # Increased iterations
 
-        arima_forecast = arima_result.get_forecast(steps=prediction_days)
-        arima_pred = arima_forecast.predicted_mean
+            # Make ARIMA predictions (used in backend)
+            arima_forecast = arima_result.get_forecast(steps=prediction_days)
+            arima_pred = arima_forecast.predicted_mean
 
-        # ARIMA results are used in the background but not shown on the dashboard.
+        except Exception as e:
+            st.write(f"ARIMA Model Error: {e}")
+
     else:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
 
@@ -180,3 +188,4 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
+
