@@ -3,9 +3,11 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from prophet import Prophet
+from prophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
 from datetime import datetime, timedelta
 
 # Set up your API and base URL for fetching data
@@ -140,14 +142,22 @@ if data:
 
     # ARIMA Model evaluation in the background without displaying results
     arima_model = ARIMA(df['y'], order=(5, 1, 0))
-    arima_result = arima_model.fit()
+    arima_result = arima_model.fit(maxiter=1000)  # Increased iterations
 
     arima_forecast = arima_result.get_forecast(steps=prediction_days)
     arima_conf_int = arima_forecast.conf_int()
     arima_pred = arima_forecast.predicted_mean
 
+    # Display ARIMA model summary for diagnostics
+    st.subheader("🔍 ARIMA Model Diagnostics")
+    st.write(arima_result.summary())
+
 else:
     st.write("⚠️ No data fetched. Please check the date range or API details.")
+
+# Display Streamlit version
+st.subheader("📦 Streamlit Version")
+st.write(f"Streamlit version: {st.__version__}")
 
 # Custom CSS for styling
 st.markdown("""
