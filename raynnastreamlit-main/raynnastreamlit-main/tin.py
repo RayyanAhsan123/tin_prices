@@ -49,12 +49,8 @@ def fetch_data(start_date, end_date):
         start_date = current_end_date + timedelta(days=1)  # Move to the next chunk
 
     return all_data if all_data else None
+ st.set_page_config(page_title="Tin Price Prediction", layout="wide")
 
-
-# Streamlit App Configuration
-st.set_page_config(page_title="Tin Price Prediction", layout="wide")
-
-# Sidebar for user inputs
 # Sidebar for user inputs
 with st.sidebar:
     st.image(
@@ -63,7 +59,7 @@ with st.sidebar:
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
     
-    # Display the current date in the sidebar
+    # Display the current date in the sidebar, which will update daily
     current_date = datetime.now().strftime('%Y-%m-%d')
     st.markdown(f"### Current Date: {current_date}")
     
@@ -87,6 +83,12 @@ with st.sidebar:
 
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
+# Main section for displaying data and results
+st.title("Tin Price Prediction Dashboard")
+
+
+
+   
 # Convert dates to strings for API
 start_date_str = start_date.strftime('%Y-%m-%d')
 end_date_str = end_date.strftime('%Y-%m-%d')
