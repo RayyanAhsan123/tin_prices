@@ -59,9 +59,9 @@ with st.sidebar:
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
     
-    # Automatically display the current date, which updates daily
     current_date = datetime.now().strftime('%Y-%m-%d')
     st.markdown(f"### Current Date: {current_date}")
+
     
     # User input for start date
     start_date = st.date_input("Start Date", datetime(2024, 8, 20))
