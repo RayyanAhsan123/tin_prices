@@ -54,6 +54,22 @@ def fetch_data(start_date, end_date):
 
 # Streamlit App Configuration
 st.set_page_config(page_title="Tin Price Prediction", layout="wide")
+# Main section for displaying data and results
+st.title("Tin Price Prediction Dashboard")
+
+# Display selected start date
+st.subheader("📅 Selected Start Date")
+st.markdown(f"**Start Date:** {start_date.strftime('%Y-%m-%d')}")
+
+# Calculate the number of days for prediction
+prediction_days = (end_date - start_date).days
+
+# Show the prediction period information
+st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
+
+# Fetch and combine data
+data = fetch_data(start_date_str, end_date_str)
+
 
 # Sidebar for user inputs
 with st.sidebar:
