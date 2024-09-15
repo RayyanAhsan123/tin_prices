@@ -3,11 +3,9 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from prophet import Prophet
-from prophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller
 from datetime import datetime, timedelta
 
 # Set up your API and base URL for fetching data
@@ -52,6 +50,7 @@ def fetch_data(start_date, end_date):
 
 # Streamlit App Configuration
 st.set_page_config(page_title="Tin Price Prediction", layout="wide")
+
 # Sidebar for user inputs
 with st.sidebar:
     st.image(
@@ -65,7 +64,7 @@ with st.sidebar:
     st.markdown(f"### Current Date: {current_date}")
     
     # User input for start date
-    start_date = date_input("Start Date", datetime(2024, 8, 1))
+    start_date = st.date_input("Start Date", datetime(2024, 8, 1))
 
     # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "1 Month", "3 Months", "6 Months"])
@@ -85,76 +84,75 @@ with st.sidebar:
     # Display the calculated end date
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
-
 # Convert dates to strings for API
 start_date_str = start_date.strftime('%Y-%m-%d')
 end_date_str = end_date.strftime('%Y-%m-%d')
 
+# Button to fetch the data
+fetch_button = st.button("Fetch Data")
+
 # Main section for displaying data and results
 st.title("Tin Price Prediction Dashboard")
 
-# Fetch and combine data (moved below after setting start_date_str and end_date_str)
-data = fetch_data(start_date_str, end_date_str)
+# Fetch data only when the button is clicked
+if fetch_button:
+    data = fetch_data(start_date_str, end_date_str)
 
-if data:
-    df = pd.DataFrame.from_dict(data, orient="index")
-    df.index = pd.to_datetime(df.index)
-    df = df.reset_index().rename(columns={"index": "ds", "TIN": "y"})
-    df = df[["ds", "y"]]
+    if data:
+        df = pd.DataFrame.from_dict(data, orient="index")
+        df.index = pd.to_datetime(df.index)
+        df = df.reset_index().rename(columns={"index": "ds", "TIN": "y"})
+        df = df[["ds", "y"]]
 
-    # Display data
-    st.subheader("📊 Fetched Data")
-    st.write(df.head(30))
+        # Display data
+        st.subheader("📊 Fetched Data")
+        st.write(df.head(30))
 
-    # Plot the data
-    st.subheader("📈 Tin Price Over Time")
-    st.line_chart(df.set_index('ds')['y'])
+        # Plot the data
+        st.subheader("📈 Tin Price Over Time")
+        st.line_chart(df.set_index('ds')['y'])
 
-    # Calculate the number of days for prediction
-    prediction_days = (end_date - start_date).days
+        # Calculate the number of days for prediction
+        prediction_days = (end_date - start_date).days
 
-    # Prophet model training and forecasting
-    st.subheader("🔮 Prophet Forecast")
-    model = Prophet(
-        changepoint_prior_scale=0.1,
-        yearly_seasonality=True,
-        weekly_seasonality=True
-    )
-    model.fit(df)
+        # Prophet model training and forecasting
+        st.subheader("🔮 Prophet Forecast")
+        model = Prophet(
+            changepoint_prior_scale=0.1,
+            yearly_seasonality=True,
+            weekly_seasonality=True
+        )
+        model.fit(df)
 
-    # Use the calculated number of prediction days
-    future = model.make_future_dataframe(periods=prediction_days)
-    forecast = model.predict(future)
+        # Use the calculated number of prediction days
+        future = model.make_future_dataframe(periods=prediction_days)
+        forecast = model.predict(future)
 
-    fig1 = model.plot(forecast)
-    st.pyplot(fig1)
+        fig1 = model.plot(forecast)
+        st.pyplot(fig1)
 
-    # Get user input for a specific prediction date
-    st.subheader("📅 Predict Tin Price for a Specific Date")
-    user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
+        # Get user input for a specific prediction date
+        st.subheader("📅 Predict Tin Price for a Specific Date")
+        user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
 
-    if user_input:
-        try:
-            predicted_price = model.predict(pd.DataFrame({'ds': [user_input]}))['yhat'].values[0]
-            st.success(f"The predicted price of tin on {user_input} is: ${predicted_price:.2f}")
-            st.balloons()
-        except Exception as e:
-            st.error(f"Error predicting price: {e}")
+        if user_input:
+            try:
+                predicted_price = model.predict(pd.DataFrame({'ds': [user_input]}))['yhat'].values[0]
+                st.success(f"The predicted price of tin on {user_input} is: ${predicted_price:.2f}")
+                st.balloons()
+            except Exception as e:
+                st.error(f"Error predicting price: {e}")
 
-    # ARIMA Model evaluation in the background without displaying results
-    arima_model = ARIMA(df['y'], order=(5, 1, 0))
-    arima_result = arima_model.fit(maxiter=1000)  # Increased iterations
+        # ARIMA Model evaluation in the background without displaying results
+        arima_model = ARIMA(df['y'], order=(5, 1, 0))
+        arima_result = arima_model.fit(maxiter=1000)  # Increased iterations
 
-    arima_forecast = arima_result.get_forecast(steps=prediction_days)
-    arima_conf_int = arima_forecast.conf_int()
-    arima_pred = arima_forecast.predicted_mean
+        arima_forecast = arima_result.get_forecast(steps=prediction_days)
+        arima_pred = arima_forecast.predicted_mean
 
-    # Display ARIMA model summary for diagnostics
-    st.subheader("🔍 ARIMA Model Diagnostics")
-    st.write(arima_result.summary())
-
-else:
-    st.write("⚠️ No data fetched. Please check the date range or API details.")
+        # ARIMA results are used in the background but not shown on the dashboard.
+    else:
+        st.write("⚠️ No data fetched. Please check the date range or API details.")
 
 # Display Streamlit version
 st.subheader("📦 Streamlit Version")
