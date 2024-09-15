@@ -55,15 +55,18 @@ def fetch_data(start_date, end_date):
 st.set_page_config(page_title="Tin Price Prediction", layout="wide")
 
 # Sidebar for user inputs
+# Sidebar for user inputs
 with st.sidebar:
-    # Add Minexx logo using the provided URL
-    st.image("https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI", width=200)
+    st.image(
+        "https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI",
+        width=200)
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
     
     # Display the current date in the sidebar
-    st.markdown(f"### Current Date: {datetime.now().strftime('%Y-%m-%d')}")
-
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    st.markdown(f"### Current Date: {current_date}")
+    
     # User input for start date
     start_date = st.date_input("Start Date", datetime(2024, 8, 1))
 
