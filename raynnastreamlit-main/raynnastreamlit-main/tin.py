@@ -1,12 +1,16 @@
+
 import streamlit as st
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from prophet import Prophet
-from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller
-from datetime import datetime, timedelta
+from prophet.diagnostics import cross_validation, performance_metrics
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller 
+from datetime import datetime, timedelta
+from datetime import datetime
 
 # Set up your API and base URL for fetching data
 api_key = "l333ljg4122qws9kxkb4hly7a8dje27vk46c7zkceih11wmnrj7lqreku176"
@@ -48,6 +52,7 @@ def fetch_data(start_date, end_date):
 
     return all_data if all_data else None
 
+
 # Streamlit App Configuration
 st.set_page_config(page_title="Tin Price Prediction", layout="wide")
 
@@ -58,7 +63,8 @@ with st.sidebar:
         width=200)
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
-
+    # Display the current date in the main section
+     st.markdown(f"### Current Date: {datetime.now().strftime('%Y-%m-%d')}")
     # User input for start date
     start_date = st.date_input("Start Date", datetime(2024, 8, 1))
 
@@ -121,6 +127,22 @@ if data:
     fig1 = model.plot(forecast)
     st.pyplot(fig1)
 
+    # Evaluate the model - Cross-validation
+ # Try cross-validation and performance metrics
+
+
+    # Get user input for a specific prediction date
+    st.subheader("📅 Predict Tin Price for a Specific Date")
+    user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
+
+    if user_input:
+        try:
+            predicted_price = model.predict(pd.DataFrame({'ds': [user_input]}))['yhat'].values[0]
+            st.success(f"The predicted price of tin on {user_input} is: ${predicted_price:.2f}")
+            st.balloons()
+        except Exception as e:
+            st.error(f"Error predicting price: {e}")
+
     # ARIMA Model
     st.subheader("🔄 ARIMA Forecast")
 
@@ -129,17 +151,9 @@ if data:
     st.write('ADF Statistic:', result[0])
     st.write('p-value:', result[1])
 
-    if result[1] >= 0.05:
-        st.warning("Time series is not stationary. Applying differencing...")
-        df['y_diff'] = df['y'].diff().dropna()  # Differencing to make data stationary
-        arima_data = df.dropna(subset=['y_diff'])  # Remove NA values caused by differencing
-    else:
-        arima_data = df
-
-    # Fit ARIMA model
-    try:
-        arima_model = ARIMA(arima_data['y'], order=(5, 1, 0))  # Adjust ARIMA parameters here
-        arima_result = arima_model.fit(maxiter=500)
+    if result[1] < 0.05:  # The series is stationary
+        arima_model = ARIMA(df['y'], order=(5, 1, 0))
+        arima_result = arima_model.fit()
 
         arima_forecast = arima_result.get_forecast(steps=prediction_days)
         arima_conf_int = arima_forecast.conf_int()
@@ -149,16 +163,38 @@ if data:
         fig2, ax = plt.subplots(figsize=(10, 6))
         ax.plot(df['ds'], df['y'], label='Historical')
         ax.plot(pd.date_range(start=df['ds'].iloc[-1], periods=prediction_days + 1, freq='D')[1:], arima_pred,
-                label='ARIMA Forecast')
+                 label='ARIMA Forecast')
         ax.fill_between(pd.date_range(start=df['ds'].iloc[-1], periods=prediction_days + 1, freq='D')[1:],
-                        arima_conf_int.iloc[:, 0], arima_conf_int.iloc[:, 1], color='pink', alpha=0.3)
+                         arima_conf_int.iloc[:, 0], arima_conf_int.iloc[:, 1], color='pink', alpha=0.3)
         ax.legend()
         ax.set_title('ARIMA Forecast')
         ax.set_xlabel('Date')
         ax.set_ylabel('Price')
         st.pyplot(fig2)
-    except Exception as e:
-        st.error(f"ARIMA model failed: {e}")
-
+    else:
+        st.write("The time series is not stationary. ARIMA might not provide reliable predictions.")
 else:
     st.write("⚠️ No data fetched. Please check the date range or API details.")
+
+# Custom CSS for styling
+st.markdown("""
+    <style>
+        .css-18e3th9 {
+            padding: 1.5rem 1rem;
+        }
+        .stButton > button {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 1rem;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+        }
+        .css-1v0mbdj {
+            display: flex;
+            justify-content: center;
+        }
+        .css-1adrfps {
+            color: #FF6347;
+        }
+    </style>
+    """, unsafe_allow_html=True)
