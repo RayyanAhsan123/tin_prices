@@ -140,8 +140,8 @@ if data:
         except Exception as e:
             st.error(f"Error predicting price: {e}")
 
-    # ARIMA Model
-    st.subheader("🔄 ARIMA Forecast")
+    # ARIMA Model evaluation without displaying the graph
+    st.subheader("🔄 ARIMA Evaluation in the Background")
 
     # Check for stationarity
     result = adfuller(df['y'])
@@ -156,18 +156,8 @@ if data:
         arima_conf_int = arima_forecast.conf_int()
         arima_pred = arima_forecast.predicted_mean
 
-        # Plot ARIMA forecast
-        fig2, ax = plt.subplots(figsize=(10, 6))
-        ax.plot(df['ds'], df['y'], label='Historical')
-        ax.plot(pd.date_range(start=df['ds'].iloc[-1], periods=prediction_days + 1, freq='D')[1:], arima_pred,
-                 label='ARIMA Forecast')
-        ax.fill_between(pd.date_range(start=df['ds'].iloc[-1], periods=prediction_days + 1, freq='D')[1:],
-                         arima_conf_int.iloc[:, 0], arima_conf_int.iloc[:, 1], color='pink', alpha=0.3)
-        ax.legend()
-        ax.set_title('ARIMA Forecast')
-        ax.set_xlabel('Date')
-        ax.set_ylabel('Price')
-        st.pyplot(fig2)
+        # Evaluate ARIMA without plotting it
+        st.write("ARIMA model evaluated successfully. Results are not displayed.")
     else:
         st.write("The time series is not stationary. ARIMA might not provide reliable predictions.")
 else:
@@ -195,4 +185,3 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
-
