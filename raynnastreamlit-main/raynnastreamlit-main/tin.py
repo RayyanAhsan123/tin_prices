@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 import pandas as pd
@@ -63,8 +62,10 @@ with st.sidebar:
         width=200)
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
-    # Display the current date in the main section
-     st.markdown(f"### Current Date: {datetime.now().strftime('%Y-%m-%d')}")
+    
+    # Display the current date in the sidebar (Corrected alignment)
+    st.markdown(f"### Current Date: {datetime.now().strftime('%Y-%m-%d')}")
+    
     # User input for start date
     start_date = st.date_input("Start Date", datetime(2024, 8, 1))
 
@@ -128,9 +129,6 @@ if data:
     st.pyplot(fig1)
 
     # Evaluate the model - Cross-validation
- # Try cross-validation and performance metrics
-
-
     # Get user input for a specific prediction date
     st.subheader("📅 Predict Tin Price for a Specific Date")
     user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
