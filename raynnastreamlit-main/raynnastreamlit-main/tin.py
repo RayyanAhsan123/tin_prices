@@ -3,11 +3,9 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from prophet import Prophet
-from prophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller 
 from datetime import datetime, timedelta
 
 # Set up your API and base URL for fetching data
@@ -49,7 +47,9 @@ def fetch_data(start_date, end_date):
         start_date = current_end_date + timedelta(days=1)  # Move to the next chunk
 
     return all_data if all_data else None
- st.set_page_config(page_title="Tin Price Prediction", layout="wide")
+
+# Streamlit App Configuration
+st.set_page_config(page_title="Tin Price Prediction", layout="wide")
 
 # Sidebar for user inputs
 with st.sidebar:
@@ -83,12 +83,6 @@ with st.sidebar:
 
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
-# Main section for displaying data and results
-st.title("Tin Price Prediction Dashboard")
-
-
-
-   
 # Convert dates to strings for API
 start_date_str = start_date.strftime('%Y-%m-%d')
 end_date_str = end_date.strftime('%Y-%m-%d')
