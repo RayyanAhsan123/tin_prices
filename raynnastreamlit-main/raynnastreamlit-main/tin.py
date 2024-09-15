@@ -52,7 +52,6 @@ def fetch_data(start_date, end_date):
 
 # Streamlit App Configuration
 st.set_page_config(page_title="Tin Price Prediction", layout="wide")
-
 # Sidebar for user inputs
 with st.sidebar:
     st.image(
@@ -61,12 +60,12 @@ with st.sidebar:
     st.title("Tin Price Predictor")
     st.info("Select a start date to fetch data and predict future tin prices.")
     
-    # Display the current date in the sidebar, which will update daily
+    # Automatically display the current date, which updates daily
     current_date = datetime.now().strftime('%Y-%m-%d')
     st.markdown(f"### Current Date: {current_date}")
     
     # User input for start date
-    start_date = st.date_input("Start Date", datetime(2024, 8, 1))
+    start_date = date_input("Start Date", datetime(2024, 8, 1))
 
     # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "1 Month", "3 Months", "6 Months"])
@@ -83,7 +82,9 @@ with st.sidebar:
     elif prediction_period == "6 Months":
         end_date = start_date + timedelta(days=6 * 30)
 
+    # Display the calculated end date
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
+
 
 # Convert dates to strings for API
 start_date_str = start_date.strftime('%Y-%m-%d')
