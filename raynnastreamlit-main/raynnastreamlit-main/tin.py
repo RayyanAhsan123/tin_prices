@@ -9,7 +9,6 @@ import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller 
 from datetime import datetime, timedelta
-from datetime import datetime
 
 # Set up your API and base URL for fetching data
 api_key = "l333ljg4122qws9kxkb4hly7a8dje27vk46c7zkceih11wmnrj7lqreku176"
@@ -54,12 +53,6 @@ def fetch_data(start_date, end_date):
 
 # Streamlit App Configuration
 st.set_page_config(page_title="Tin Price Prediction", layout="wide")
-# Main section for displaying data and results
-
-# Fetch and combine data
-data = fetch_data(start_date_str, end_date_str)
-
-
 # Sidebar for user inputs
 with st.sidebar:
     st.image(
@@ -95,13 +88,10 @@ with st.sidebar:
 start_date_str = start_date.strftime('%Y-%m-%d')
 end_date_str = end_date.strftime('%Y-%m-%d')
 
-# Calculate the number of days for prediction
-prediction_days = (end_date - start_date).days
-
 # Main section for displaying data and results
 st.title("Tin Price Prediction Dashboard")
 
-# Fetch and combine data
+# Fetch and combine data (moved below after setting start_date_str and end_date_str)
 data = fetch_data(start_date_str, end_date_str)
 
 if data:
@@ -178,7 +168,6 @@ if data:
         st.write("The time series is not stationary. ARIMA might not provide reliable predictions.")
 else:
     st.write("⚠️ No data fetched. Please check the date range or API details.")
-
 # Custom CSS for styling
 st.markdown("""
     <style>
