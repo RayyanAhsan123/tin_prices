@@ -64,7 +64,7 @@ with st.sidebar:
     st.markdown(f"### Current Date: {current_date}")
     
     # User input for start date
-    start_date = st.date_input("Start Date", datetime(2024, 8, 1))
+    start_date = st.date_input("Start Date", datetime(2024, 8, 20))
 
     # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "1 Month", "3 Months", "6 Months"])
