@@ -127,7 +127,6 @@ if data:
     fig1 = model.plot(forecast)
     st.pyplot(fig1)
 
-    # Evaluate the model - Cross-validation
     # Get user input for a specific prediction date
     st.subheader("📅 Predict Tin Price for a Specific Date")
     user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
@@ -140,26 +139,14 @@ if data:
         except Exception as e:
             st.error(f"Error predicting price: {e}")
 
-    # ARIMA Model evaluation without displaying the graph
-    st.subheader("🔄 ARIMA Evaluation in the Background")
+    # ARIMA Model evaluation in the background without displaying results
+    arima_model = ARIMA(df['y'], order=(5, 1, 0))
+    arima_result = arima_model.fit()
 
-    # Check for stationarity
-    result = adfuller(df['y'])
-    st.write('ADF Statistic:', result[0])
-    st.write('p-value:', result[1])
+    arima_forecast = arima_result.get_forecast(steps=prediction_days)
+    arima_conf_int = arima_forecast.conf_int()
+    arima_pred = arima_forecast.predicted_mean
 
-    if result[1] < 0.05:  # The series is stationary
-        arima_model = ARIMA(df['y'], order=(5, 1, 0))
-        arima_result = arima_model.fit()
-
-        arima_forecast = arima_result.get_forecast(steps=prediction_days)
-        arima_conf_int = arima_forecast.conf_int()
-        arima_pred = arima_forecast.predicted_mean
-
-        # Evaluate ARIMA without plotting it
-        st.write("ARIMA model evaluated successfully. Results are not displayed.")
-    else:
-        st.write("The time series is not stationary. ARIMA might not provide reliable predictions.")
 else:
     st.write("⚠️ No data fetched. Please check the date range or API details.")
 
