@@ -63,7 +63,7 @@ with st.sidebar:
     st.markdown(f"### Current Date: {current_date}")
 
     # Metal selection with correct symbols
-    metal_symbol_map = {"TIN": "TIN", "TUNGSTEN": "XW"}
+    metal_symbol_map = {"TIN": "TIN", "TUNGSTEN": "TUNGSTEN"}
     metal = st.selectbox("Select Metal", ["TIN", "TUNGSTEN"])
     metal_symbol = metal_symbol_map[metal]
 
