@@ -49,13 +49,13 @@ def fetch_data(symbol, start_date, end_date):
     return all_data if all_data else None
 
 # Streamlit App Configuration
-st.set_page_config(page_title="3Ts Price Prediction", layout="wide")
+st.set_page_config(page_title=" Price Prediction", layout="wide")
 
 # Sidebar for user inputs
 with st.sidebar:
     st.image(
         "https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI",
-        width=200)
+        width=150)
     st.title("3Ts Price Predictor")
     st.info("Select a start date to fetch data and predict future prices.")
     
