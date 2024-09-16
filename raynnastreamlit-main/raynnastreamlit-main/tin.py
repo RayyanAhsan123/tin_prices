@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 api_key = "l333ljg4122qws9kxkb4hly7a8dje27vk46c7zkceih11wmnrj7lqreku176"
 base_url = "https://metals-api.com/api"
 
-# Function to fetch data for a given timeframe, splitting into chunks of 15 days
-def fetch_data(start_date, end_date):
+# Function to fetch data for a given metal and timeframe
+def fetch_data(symbol, start_date, end_date):
     date_format = "%Y-%m-%d"
     start_date = datetime.strptime(start_date, date_format)
     end_date = datetime.strptime(end_date, date_format)
@@ -26,7 +26,7 @@ def fetch_data(start_date, end_date):
         params = {
             "access_key": api_key,
             "base": "USD",
-            "symbols": "TIN",
+            "symbols": symbol,
             "start_date": start_date.strftime(date_format),
             "end_date": current_end_date.strftime(date_format)
         }
@@ -49,20 +49,24 @@ def fetch_data(start_date, end_date):
     return all_data if all_data else None
 
 # Streamlit App Configuration
-st.set_page_config(page_title="Tin Price Prediction", layout="wide")
+st.set_page_config(page_title="3Ts Price Prediction", layout="wide")
 
 # Sidebar for user inputs
 with st.sidebar:
     st.image(
         "https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI",
         width=200)
-    st.title("Tin Price Predictor")
-    st.info("Select a start date to fetch data and predict future tin prices.")
+    st.title("3Ts Price Predictor")
+    st.info("Select a start date to fetch data and predict future prices.")
     
     current_date = datetime.now().strftime('%Y-%m-%d')
     st.markdown(f"### Current Date: {current_date}")
 
-    
+    # Metal selection with correct symbols
+    metal_symbol_map = {"TIN": "TIN", "TUNGSTEN": "XW"}
+    metal = st.selectbox("Select Metal", ["TIN", "TUNGSTEN"])
+    metal_symbol = metal_symbol_map[metal]
+
     # User input for start date
     start_date = st.date_input("Start Date", datetime(2024, 8, 20))
 
@@ -89,37 +93,37 @@ start_date_str = start_date.strftime('%Y-%m-%d')
 end_date_str = end_date.strftime('%Y-%m-%d')
 
 # Button to fetch the data
-fetch_button = st.button("Fetch Data")
+fetch_button = st.button(f"Fetch {metal} Data")
 
 # Main section for displaying data and results
-st.title("Tin Price Prediction Dashboard")
+st.title(f"{metal} Price Prediction Dashboard")
 
 # Fetch data only when the button is clicked
 if fetch_button:
-    data = fetch_data(start_date_str, end_date_str)
+    data = fetch_data(metal_symbol, start_date_str, end_date_str)
 
     if data:
         df = pd.DataFrame.from_dict(data, orient="index")
         df.index = pd.to_datetime(df.index)
-        df = df.reset_index().rename(columns={"index": "ds", "TIN": "y"})
+        df = df.reset_index().rename(columns={"index": "ds", metal_symbol: "y"})
         df = df[["ds", "y"]]
 
         # Handle missing values by filling with the mean or interpolation
         df['y'] = df['y'].fillna(method='ffill')
 
         # Display data
-        st.subheader("📊 Fetched Data")
+        st.subheader(f"📊 Fetched {metal} Data")
         st.write(df.head(30))
 
         # Plot the data
-        st.subheader("📈 Tin Price Over Time")
+        st.subheader(f"📈 {metal} Price Over Time")
         st.line_chart(df.set_index('ds')['y'])
 
         # Calculate the number of days for prediction
         prediction_days = (end_date - start_date).days
 
         # Prophet model training and forecasting
-        st.subheader("🔮 Prophet Forecast")
+        st.subheader(f"🔮 {metal} Prophet Forecast")
         model = Prophet(
             changepoint_prior_scale=0.1,
             yearly_seasonality=True,
@@ -135,13 +139,13 @@ if fetch_button:
         st.pyplot(fig1)
 
         # Get user input for a specific prediction date
-        st.subheader("📅 Predict Tin Price for a Specific Date")
+        st.subheader(f"📅 Predict {metal} Price for a Specific Date")
         user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
 
         if user_input:
             try:
                 predicted_price = model.predict(pd.DataFrame({'ds': [user_input]}))['yhat'].values[0]
-                st.success(f"The predicted price of tin on {user_input} is: ${predicted_price:.2f}")
+                st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
                 st.balloons()
             except Exception as e:
                 st.error(f"Error predicting price: {e}")
@@ -150,7 +154,7 @@ if fetch_button:
         try:
             # Fit the ARIMA model with data, ensuring no missing values
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
-            arima_result = arima_model.fit()  # Removed maxiter
+            arima_result = arima_model.fit()
 
             # Make ARIMA predictions (used in backend)
             arima_forecast = arima_result.get_forecast(steps=prediction_days)
