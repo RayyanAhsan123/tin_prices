@@ -56,7 +56,7 @@ with st.sidebar:
     st.image(
         "https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI",
         width=150)
-    st.title("3Ts Price Predictor")
+    st.title("Price Predictor")
     st.info("Select a start date to fetch data and predict future prices.")
     
     current_date = datetime.now().strftime('%Y-%m-%d')
