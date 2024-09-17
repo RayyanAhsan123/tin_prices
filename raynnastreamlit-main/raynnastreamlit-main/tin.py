@@ -118,10 +118,9 @@ if fetch_button:
         # Plot the data
         st.subheader(f"📈 {metal} Price Over Time")
         st.line_chart(df.set_index('ds')['y'])
-
-        # Calculate the number of days for prediction
-        prediction_days = (end_date - start_date).days
-
+        
+        # Calculate number of prediction days based on the user-inputted prediction period or custom date
+        prediction_days = (datetime.strptime("2024-09-18", '%Y-%m-%d') - start_date).days
         # Prophet model training and forecasting
         st.subheader(f"🔮 {metal} Prophet Forecast")
         model = Prophet(
