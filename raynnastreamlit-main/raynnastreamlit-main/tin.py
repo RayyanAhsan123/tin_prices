@@ -156,14 +156,16 @@ if fetch_button:
                 pred_date = datetime.strptime(user_input, '%Y-%m-%d')
 
                 # Ensure the entered date is within the forecasted range
-                if pred_date < forecast['ds'].min() or pred_date > forecast['ds'].max():
-                    st.error(f"Please enter a date within the forecast range: {forecast['ds'].min().strftime('%Y-%m-%d')} to {forecast['ds'].max().strftime('%Y-%m-%d')}")
+                if forecast['ds'].min() <= pred_date <= forecast['ds'].max():
+                    # Find the closest date in the forecast and retrieve the predicted price
+                    predicted_price = forecast.loc[forecast['ds'] == pred_date]['yhat'].values
+                    if predicted_price.size > 0:
+                        st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price[0]:.2f}")
+                        st.balloons()
+                    else:
+                        st.warning(f"No exact match found for {user_input}, please choose a nearby date.")
                 else:
-                    # Find the predicted price for the entered date
-                    predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
-                    st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
-                    st.balloons()
-
+                    st.error(f"Please enter a date within the forecast range: {forecast['ds'].min().strftime('%Y-%m-%d')} to {forecast['ds'].max().strftime('%Y-%m-%d')}")
             except ValueError:
                 st.error("Invalid date format. Please enter a valid date in YYYY-MM-DD format.")
             except Exception as e:
@@ -187,7 +189,7 @@ if fetch_button:
 
 # Custom CSS for styling
 st.markdown("""
-    <style>
+ <style>
         .css-18e3th9 {
             padding: 1.5rem 1rem;
         }
