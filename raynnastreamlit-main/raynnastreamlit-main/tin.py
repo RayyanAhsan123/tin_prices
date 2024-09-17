@@ -22,7 +22,7 @@ def fetch_data(symbol, start_date, end_date):
 
     # Fetch data in smaller chunks, e.g., 15 days
     while start_date <= end_date:
-        current_end_date = min(start_date + timedelta(days=15), end_date)  # 15-day chunk
+        current_end_date = min(start_date + timedelta(days=30), end_date)  # 30-day chunk
         params = {
             "access_key": api_key,
             "base": "USD",
