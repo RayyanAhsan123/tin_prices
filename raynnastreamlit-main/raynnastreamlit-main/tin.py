@@ -138,29 +138,8 @@ if fetch_button:
         fig1 = model.plot(forecast)
         st.pyplot(fig1)
 
-      # Get user input for a specific prediction date
-st.subheader(f"📅 Predict {metal} Price for a Specific Date")
-user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
-
-if user_input:
-    try:
-        # Ensure the entered date is valid
-        pred_date = datetime.strptime(user_input, '%Y-%m-%d')
-
-        # Ensure the entered date is within the forecasted range
-        if pred_date < forecast['ds'].min() or pred_date > forecast['ds'].max():
-            st.error(f"Please enter a date within the forecast range: {forecast['ds'].min().strftime('%Y-%m-%d')} to {forecast['ds'].max().strftime('%Y-%m-%d')}")
-        else:
-            # Find the predicted price for the entered date
-            predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
-            st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
-            st.balloons()
-
-    except ValueError:
-        st.error("Invalid date format. Please enter a valid date in YYYY-MM-DD format.")
-    except Exception as e:
-        st.error(f"Error predicting price: {e}")
-
+        # Store forecast for later use
+        st.session_state['forecast'] = forecast
 
         # ARIMA Model evaluation in the background without displaying results
         try:
@@ -177,6 +156,35 @@ if user_input:
 
     else:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
+
+# Get user input for a specific prediction date
+st.subheader(f"📅 Predict {metal} Price for a Specific Date")
+user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
+
+if user_input:
+    try:
+        # Ensure the entered date is valid
+        pred_date = datetime.strptime(user_input, '%Y-%m-%d')
+
+        # Retrieve the forecast data
+        forecast = st.session_state.get('forecast')
+
+        if forecast is None:
+            st.error("Forecast data is not available. Fetch the data first.")
+        else:
+            # Ensure the entered date is within the forecasted range
+            if pred_date < forecast['ds'].min() or pred_date > forecast['ds'].max():
+                st.error(f"Please enter a date within the forecast range: {forecast['ds'].min().strftime('%Y-%m-%d')} to {forecast['ds'].max().strftime('%Y-%m-%d')}")
+            else:
+                # Find the predicted price for the entered date
+                predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
+                st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
+                st.balloons()
+
+    except ValueError:
+        st.error("Invalid date format. Please enter a valid date in YYYY-MM-DD format.")
+    except Exception as e:
+        st.error(f"Error predicting price: {e}")
 
 # Custom CSS for styling
 st.markdown("""
