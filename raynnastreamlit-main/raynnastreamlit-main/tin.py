@@ -13,14 +13,12 @@ api_key = "l333ljg4122qws9kxkb4hly7a8dje27vk46c7zkceih11wmnrj7lqreku176"
 base_url = "https://metals-api.com/api"
 
 # Function to fetch data for a given metal and timeframe
-def fetch_data(symbol, start_date, end_date, progress_bar):
+def fetch_data(symbol, start_date, end_date):
     date_format = "%Y-%m-%d"
     start_date = datetime.strptime(start_date, date_format)
     end_date = datetime.strptime(end_date, date_format)
 
     all_data = {}
-    total_days = (end_date - start_date).days
-    progress = 0
 
     # Fetch data in smaller chunks, e.g., 15 days
     while start_date <= end_date:
@@ -46,15 +44,12 @@ def fetch_data(symbol, start_date, end_date, progress_bar):
             st.error(f"Error fetching data. Status code: {response.status_code}, Response: {response.text}")
             return None
 
-        progress += (current_end_date - start_date).days
-        progress_bar.progress(progress / total_days)
-
         start_date = current_end_date + timedelta(days=1)  # Move to the next chunk
 
     return all_data if all_data else None
 
 # Streamlit App Configuration
-st.set_page_config(page_title="Price Prediction", layout="wide")
+st.set_page_config(page_title=" Price Prediction", layout="wide")
 
 # Sidebar for user inputs
 with st.sidebar:
@@ -105,10 +100,7 @@ st.title(f"{metal} Price Prediction Dashboard")
 
 # Fetch data only when the button is clicked
 if fetch_button:
-    progress_bar = st.progress(0)
-    
-    with st.spinner(f"Fetching {metal} data..."):
-        data = fetch_data(metal_symbol, start_date_str, end_date_str, progress_bar)
+    data = fetch_data(metal_symbol, start_date_str, end_date_str)
 
     if data:
         df = pd.DataFrame.from_dict(data, orient="index")
@@ -139,47 +131,46 @@ if fetch_button:
         )
         model.fit(df)
 
-        # Extend the forecast to future dates
+        # Use the calculated number of prediction days
         future = model.make_future_dataframe(periods=prediction_days)
         forecast = model.predict(future)
 
         fig1 = model.plot(forecast)
         st.pyplot(fig1)
 
-        # Get user input for a specific prediction date
-        st.subheader(f"📅 Predict {metal} Price for a Specific Date")
-        user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
+      # Get user input for a specific prediction date
+st.subheader(f"📅 Predict {metal} Price for a Specific Date")
+user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
 
-        if user_input:
-            try:
-                # Ensure the entered date is valid
-                pred_date = datetime.strptime(user_input, '%Y-%m-%d')
+if user_input:
+    try:
+        # Ensure the entered date is valid
+        pred_date = datetime.strptime(user_input, '%Y-%m-%d')
 
-                # Ensure the entered date is within the forecasted range
-                if forecast['ds'].min() <= pred_date <= forecast['ds'].max():
-                    # Find the closest date in the forecast and retrieve the predicted price
-                    predicted_price = forecast.loc[forecast['ds'] == pred_date]['yhat'].values
-                    if predicted_price.size > 0:
-                        st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price[0]:.2f}")
-                        st.balloons()
-                    else:
-                        st.warning(f"No exact match found for {user_input}, please choose a nearby date.")
-                else:
-                    st.error(f"Please enter a date within the forecast range: {forecast['ds'].min().strftime('%Y-%m-%d')} to {forecast['ds'].max().strftime('%Y-%m-%d')}")
-            except ValueError:
-                st.error("Invalid date format. Please enter a valid date in YYYY-MM-DD format.")
-            except Exception as e:
-                st.error(f"Error predicting price: {e}")
+        # Ensure the entered date is within the forecasted range
+        if pred_date < forecast['ds'].min() or pred_date > forecast['ds'].max():
+            st.error(f"Please enter a date within the forecast range: {forecast['ds'].min().strftime('%Y-%m-%d')} to {forecast['ds'].max().strftime('%Y-%m-%d')}")
+        else:
+            # Find the predicted price for the entered date
+            predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
+            st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
+            st.balloons()
 
-        # ARIMA Model evaluation
+    except ValueError:
+        st.error("Invalid date format. Please enter a valid date in YYYY-MM-DD format.")
+    except Exception as e:
+        st.error(f"Error predicting price: {e}")
+
+
+        # ARIMA Model evaluation in the background without displaying results
         try:
-            st.subheader(f"📊 ARIMA Model Forecast for {metal}")
+            # Fit the ARIMA model with data, ensuring no missing values
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
             arima_result = arima_model.fit()
 
-            # Make ARIMA predictions
-            arima_forecast = arima_result.forecast(steps=prediction_days)
-            st.line_chart(arima_forecast)
+            # Make ARIMA predictions (used in backend)
+            arima_forecast = arima_result.get_forecast(steps=prediction_days)
+            arima_pred = arima_forecast.predicted_mean
 
         except Exception as e:
             st.write(f"ARIMA Model Error: {e}")
@@ -189,7 +180,7 @@ if fetch_button:
 
 # Custom CSS for styling
 st.markdown("""
- <style>
+    <style>
         .css-18e3th9 {
             padding: 1.5rem 1rem;
         }
