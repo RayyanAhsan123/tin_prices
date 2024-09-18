@@ -1,3 +1,4 @@
+# Import necessary libraries
 import streamlit as st
 import requests
 import pandas as pd
@@ -79,11 +80,12 @@ with st.sidebar:
     }
 
     # Internal start date (hidden from dashboard but used in the app)
-    start_date = datetime(2024, 8, 1)  # Set this as a fixed or default start date
+    start_date = datetime(2024, 8, 20)  # Set this as a fixed or default start date
 
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 
-
+    # Removed the line that displays the end date
+    # st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
@@ -142,7 +144,6 @@ if fetch_button:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
 
 # Predict price for a specific date
-
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
 user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
 
@@ -184,7 +185,6 @@ if user_input:
         st.error("Invalid date format. Please enter a valid date in YYYY-MM-DD format.")
     except Exception as e:
         st.error(f"Error predicting price: {e}")
-
 
 # Custom CSS for styling
 st.markdown("""
