@@ -168,9 +168,9 @@ if user_input:
                 
                 # Extend forecast by the required number of days
                 additional_days = (pred_date - max_date).days
-                
+
                 # Extend the future dataframe by the additional days
-                future = model.make_future_dataframe(periods=additional_days, freq='D')
+                future = model.make_future_dataframe(periods=additional_days + 1, freq='D')  # Add extra day to ensure inclusion
                 forecast = model.predict(future)
                 st.session_state['forecast'] = forecast
 
@@ -186,7 +186,6 @@ if user_input:
         st.error("Invalid date format. Please enter a valid date in YYYY-MM-DD format.")
     except Exception as e:
         st.error(f"Error predicting price: {e}")
-
 
 # Custom CSS for styling
 st.markdown("""
