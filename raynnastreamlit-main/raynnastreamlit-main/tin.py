@@ -59,8 +59,8 @@ with st.sidebar:
     st.title("Price Predictor")
     st.info("Select a prediction period to fetch data and predict future prices.")
     
-    current_date = datetime.now().strftime('%Y-%m-%d')
-    st.markdown(f"### Current Date: {current_date}")
+    # Use date picker to select the current date (shows the calendar)
+    current_date = st.date_input("Current Date", value=datetime.now().date())
     
     # Metal selection
     metal_symbol_map = {"TIN": "TIN", "TUNGSTEN": "TUNGSTEN"}
@@ -80,13 +80,12 @@ with st.sidebar:
     }
 
     # Internal start date (hidden from dashboard but used in the app)
-    start_date = datetime(2024, 8, 20)  # You can set this as a fixed or default start date
+    start_date = datetime(2024, 8, 20)  # Set this as a fixed or default start date
 
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
     
     # Display the calculated end date
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
-
 
     # Display the calculated end date
 
