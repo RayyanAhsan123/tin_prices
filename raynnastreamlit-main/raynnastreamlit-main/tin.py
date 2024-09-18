@@ -78,11 +78,10 @@ with st.sidebar:
         "3 Months": 90,
         "6 Months": 180
     }
-
-    # Internal start date (hidden from dashboard but used in the app)
-    start_date = datetime(2024, 8, 1)  # Set this as a fixed or default start date
-
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
+    # Replace the static start date with the user-selected date or current date
+    start_date = st.date_input("Select Start Date", value=datetime.now().date())  # User-selected or default to today
+    
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 
     # Removed the line that displays the end date
     # st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
