@@ -59,7 +59,7 @@ with st.sidebar:
     st.title("Price Predictor")
     st.info("Select a prediction period to fetch data and predict future prices.")
     
-    # Use date picker to select the current date (shows the calendar)
+    # User input for selecting the current date (optional for display)
     current_date = st.date_input("Current Date", value=datetime.now().date())
     
     # Metal selection
@@ -78,20 +78,20 @@ with st.sidebar:
         "3 Months": 90,
         "6 Months": 180
     }
-    # Replace the static start date with the user-selected date or current date
-    start_date = st.date_input("Select Start Date", value=datetime.now().date())  # User-selected or default to today
-    
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 
-    # Removed the line that displays the end date
-    # st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
+    # Dynamic start date selected by the user (or defaults to the current date)
+    start_date = st.date_input("Select Start Date", value=datetime.now().date())
+
+    # Calculate the end date based on the user-selected start date and prediction period
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
 
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
 
 # Main section for displaying data and results
 st.title(f"{metal} Price Prediction Dashboard")
-# Prophet model training and forecasting
+
+# Fetch data and model training when button is clicked
 if fetch_button:
     data = fetch_data(metal_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
 
@@ -128,11 +128,12 @@ if fetch_button:
         fig1 = model.plot(forecast)
         st.pyplot(fig1)
         st.session_state['forecast'] = forecast
-      # ARIMA Model evaluation
+        
+        # ARIMA model evaluation (optional)
         try:
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
             arima_result = arima_model.fit()
-            arima_forecast = arima_result.get_forecast(steps=prediction_days)
+            arima_forecast = arima_result.get_forecast(steps=period_days.get(prediction_period, 30))
             arima_pred = arima_forecast.predicted_mean
         except Exception as e:
             st.write(f"ARIMA Model Error: {e}")
@@ -140,8 +141,6 @@ if fetch_button:
     else:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
 
-
-# Predict price for a specific date
 # Predict price for a specific date
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
 user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
@@ -208,3 +207,4 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
+
