@@ -22,7 +22,7 @@ def fetch_data(symbol, start_date, end_date):
     all_data = {}
 
     while start_date <= end_date:
-        current_end_date = min(start_date + timedelta(days=30), end_date)
+        current_end_date = min(start_date + timedelta(days=15), end_date)
         params = {
             "access_key": api_key,
             "base": "USD",
