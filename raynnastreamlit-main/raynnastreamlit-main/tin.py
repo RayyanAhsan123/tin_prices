@@ -84,9 +84,7 @@ with st.sidebar:
 
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
     
-    # Display the calculated end date
-    st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
-
+  
     # Display the calculated end date
 
 # Convert dates to strings for API
