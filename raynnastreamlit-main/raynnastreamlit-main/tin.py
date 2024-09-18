@@ -67,7 +67,7 @@ with st.sidebar:
     metal_symbol = metal_symbol_map[metal]
 
     # User input for start date
-    start_date = st.date_input("Start Date", datetime(2024, 8, 10))
+    start_date = st.date_input("Start Date", datetime(2024, 8, 20))
 
     # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "1 Month", "3 Months", "6 Months"])
@@ -81,6 +81,9 @@ with st.sidebar:
         "6 Months": 180
     }
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
+
+    # Display the calculated end date
+    st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
 # Convert dates to strings for API
 start_date_str = start_date.strftime('%Y-%m-%d')
@@ -154,12 +157,26 @@ if user_input:
         if forecast is None:
             st.error("Forecast data is not available. Fetch the data first.")
         else:
-            if pred_date < forecast['ds'].min() or pred_date > forecast['ds'].max():
-                st.error(f"Please enter a date within the forecast range: {forecast['ds'].min().strftime('%Y-%m-%d')} to {forecast['ds'].max().strftime('%Y-%m-%d')}")
-            else:
+            min_date = forecast['ds'].min()
+            max_date = forecast['ds'].max()
+            
+            # Extend the forecast if the input date is outside the range
+            if pred_date < min_date or pred_date > max_date:
+                st.warning(f"Extending forecast to include {user_input}.")
+                
+                # Extend forecast by the required number of days
+                additional_days = (pred_date - max_date).days
+                future = model.make_future_dataframe(periods=additional_days)
+                forecast = model.predict(future)
+                st.session_state['forecast'] = forecast
+            
+            # After extending, check if the date is in range now
+            if pred_date >= min_date and pred_date <= forecast['ds'].max():
                 predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
                 st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
                 st.balloons()
+            else:
+                st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {forecast['ds'].max().strftime('%Y-%m-%d')}")
 
     except ValueError:
         st.error("Invalid date format. Please enter a valid date in YYYY-MM-DD format.")
