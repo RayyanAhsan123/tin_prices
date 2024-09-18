@@ -80,9 +80,9 @@ with st.sidebar:
     }
 
     # Internal start date (hidden from dashboard but used in the app)
-    start_date = datetime(2024, 8, 20)  # Set this as a fixed or default start date
+    start_date = datetime(2024, 8, 01)  # Set this as a fixed or default start date
 
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
 
     # Removed the line that displays the end date
     # st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
