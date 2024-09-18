@@ -79,11 +79,10 @@ with st.sidebar:
         "6 Months": 180
     }
 
-    # Dynamic start date selected by the user (or defaults to the current date)
-    start_date = st.date_input("Select Start Date", value=datetime.now().date())
-
+    start_date = datetime(2024, 8, 15)  # Set this as a fixed or default start date
+    
     # Calculate the end date based on the user-selected start date and prediction period
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
