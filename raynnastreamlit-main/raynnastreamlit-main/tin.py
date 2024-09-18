@@ -51,7 +51,6 @@ def fetch_data(symbol, start_date, end_date):
 st.set_page_config(page_title="Price Prediction", layout="wide")
 
 # Sidebar for user inputs
-# Sidebar for user inputs
 with st.sidebar:
     st.image(
         "https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI",
@@ -83,13 +82,9 @@ with st.sidebar:
     start_date = datetime(2024, 8, 20)  # Set this as a fixed or default start date
 
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
-    
-  
-    # Display the calculated end date
 
-# Convert dates to strings for API
-start_date_str = start_date.strftime('%Y-%m-%d')
-end_date_str = end_date.strftime('%Y-%m-%d')
+    # Removed the line that displays the end date
+    # st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
@@ -98,7 +93,7 @@ fetch_button = st.button(f"Fetch {metal} Data")
 st.title(f"{metal} Price Prediction Dashboard")
 
 if fetch_button:
-    data = fetch_data(metal_symbol, start_date_str, end_date_str)
+    data = fetch_data(metal_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
 
     if data:
         df = pd.DataFrame.from_dict(data, orient="index")
@@ -118,7 +113,7 @@ if fetch_button:
         st.line_chart(df.set_index('ds')['y'])
         
         # Calculate number of prediction days based on the user-inputted prediction period
-        prediction_days = (end_date - start_date).days
+        prediction_days = period_days.get(prediction_period, 30)
         st.subheader(f"🔮 {metal} Prophet Forecast")
         model = Prophet(
             changepoint_prior_scale=0.1,
@@ -127,7 +122,7 @@ if fetch_button:
         )
         model.fit(df)
 
-        future = model.make_future_dataframe(periods=prediction_days)
+        future = model.make_future_dataframe(periods=prediction_days, freq='D')
         forecast = model.predict(future)
 
         fig1 = model.plot(forecast)
