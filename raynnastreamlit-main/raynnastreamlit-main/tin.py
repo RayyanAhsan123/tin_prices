@@ -92,7 +92,7 @@ fetch_button = st.button(f"Fetch {metal} Data")
 
 # Main section for displaying data and results
 st.title(f"{metal} Price Prediction Dashboard")
-
+# Prophet model training and forecasting
 if fetch_button:
     data = fetch_data(metal_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
 
@@ -113,8 +113,7 @@ if fetch_button:
         st.subheader(f"📈 {metal} Price Over Time")
         st.line_chart(df.set_index('ds')['y'])
         
-        # Calculate number of prediction days based on the user-inputted prediction period
-        prediction_days = period_days.get(prediction_period, 30)
+        # Prophet model training and storing in session_state
         st.subheader(f"🔮 {metal} Prophet Forecast")
         model = Prophet(
             changepoint_prior_scale=0.1,
@@ -122,16 +121,15 @@ if fetch_button:
             weekly_seasonality=True
         )
         model.fit(df)
+        st.session_state['prophet_model'] = model  # Store the trained model in session_state
 
-        future = model.make_future_dataframe(periods=prediction_days, freq='D')
+        # Making future predictions
+        future = model.make_future_dataframe(periods=period_days.get(prediction_period, 30), freq='D')
         forecast = model.predict(future)
-
         fig1 = model.plot(forecast)
         st.pyplot(fig1)
-
         st.session_state['forecast'] = forecast
-
-        # ARIMA Model evaluation
+      # ARIMA Model evaluation
         try:
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
             arima_result = arima_model.fit()
@@ -144,6 +142,7 @@ if fetch_button:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
 
 
+# Predict price for a specific date
 # Predict price for a specific date
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
 user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
@@ -162,13 +161,18 @@ if user_input:
             if pred_date > max_date:
                 st.warning(f"Extending forecast to include {user_input}.")
 
-                # Calculate additional days needed
-                additional_days = (pred_date - max_date).days
+                # Ensure the Prophet model is available in session_state
+                model = st.session_state.get('prophet_model')
+                if model is None:
+                    st.error("The model is not available. Fetch the data and train the model first.")
+                else:
+                    # Calculate additional days needed
+                    additional_days = (pred_date - max_date).days
 
-                # Extend the future dataframe by the additional days
-                future = model.make_future_dataframe(periods=additional_days + 1, freq='D')  # Ensure it includes the date
-                forecast = model.predict(future)
-                st.session_state['forecast'] = forecast
+                    # Extend the future dataframe by the additional days
+                    future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
+                    forecast = model.predict(future)
+                    st.session_state['forecast'] = forecast
 
             # After extending, check if the date is now in range
             min_date = forecast['ds'].min()
