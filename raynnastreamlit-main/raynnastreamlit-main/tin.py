@@ -143,6 +143,7 @@ if fetch_button:
     else:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
 
+
 # Predict price for a specific date
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
 user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
@@ -157,27 +158,31 @@ if user_input:
         else:
             min_date = forecast['ds'].min()
             max_date = forecast['ds'].max()
-     if pred_date > max_date:
-    st.warning(f"Extending forecast to include {user_input}.")
-    
-    # Calculate additional days needed
-    additional_days = (pred_date - max_date).days
-    
-    # Extend the future dataframe by the additional days
-    future = model.make_future_dataframe(periods=additional_days + 1, freq='D')  # Ensure it includes the date
-    forecast = model.predict(future)
-    st.session_state['forecast'] = forecast
 
-# After extending, check if the date is now in range
-min_date = forecast['ds'].min()
-max_date = forecast['ds'].max()
+            if pred_date > max_date:
+                st.warning(f"Extending forecast to include {user_input}.")
 
-if pred_date >= min_date and pred_date <= max_date:
-    predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
-    st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
-    st.balloons()
-else:
-    st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {max_date.strftime('%Y-%m-%d')}")
+                # Calculate additional days needed
+                additional_days = (pred_date - max_date).days
+
+                # Extend the future dataframe by the additional days
+                future = model.make_future_dataframe(periods=additional_days + 1, freq='D')  # Ensure it includes the date
+                forecast = model.predict(future)
+                st.session_state['forecast'] = forecast
+
+            # After extending, check if the date is now in range
+            min_date = forecast['ds'].min()
+            max_date = forecast['ds'].max()
+
+            if pred_date >= min_date and pred_date <= max_date:
+                predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
+                st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
+                st.balloons()
+            else:
+                st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {max_date.strftime('%Y-%m-%d')}")
+    except ValueError:
+        st.error("Please enter a valid date in the format YYYY-MM-DD.")
+
 # Custom CSS for styling
 st.markdown("""
     <style>
