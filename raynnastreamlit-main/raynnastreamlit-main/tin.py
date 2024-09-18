@@ -51,23 +51,21 @@ def fetch_data(symbol, start_date, end_date):
 st.set_page_config(page_title="Price Prediction", layout="wide")
 
 # Sidebar for user inputs
+# Sidebar for user inputs
 with st.sidebar:
     st.image(
         "https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI",
         width=150)
     st.title("Price Predictor")
-    st.info("Select a start date to fetch data and predict future prices.")
-
+    st.info("Select a prediction period to fetch data and predict future prices.")
+    
     current_date = datetime.now().strftime('%Y-%m-%d')
     st.markdown(f"### Current Date: {current_date}")
-
+    
     # Metal selection
     metal_symbol_map = {"TIN": "TIN", "TUNGSTEN": "TUNGSTEN"}
     metal = st.selectbox("Select Metal", ["TIN", "TUNGSTEN"])
     metal_symbol = metal_symbol_map[metal]
-
-    # User input for start date
-    start_date = st.date_input("Start Date", datetime(2024, 8, 20))
 
     # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "1 Month", "3 Months", "6 Months"])
@@ -80,10 +78,17 @@ with st.sidebar:
         "3 Months": 90,
         "6 Months": 180
     }
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 
+    # Internal start date (hidden from dashboard but used in the app)
+    start_date = datetime(2024, 8, 20)  # You can set this as a fixed or default start date
+
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
+    
     # Display the calculated end date
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
+
+
+    # Display the calculated end date
 
 # Convert dates to strings for API
 start_date_str = start_date.strftime('%Y-%m-%d')
