@@ -141,48 +141,34 @@ if fetch_button:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
 
 # Predict price for a specific date
+# Predict price for a specific date
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
 user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
 
 if user_input:
     try:
         pred_date = datetime.strptime(user_input, '%Y-%m-%d')
-        forecast = st.session_state.get('forecast')
 
-        if forecast is None:
-            st.error("Forecast data is not available. Fetch the data first.")
+        # Ensure the Prophet model is available in session_state
+        model = st.session_state.get('prophet_model')
+        if model is None:
+            st.error("The model is not available. Fetch the data and train the model first.")
         else:
-            min_date = forecast['ds'].min()
-            max_date = forecast['ds'].max()
+            # Calculate how many days to extend based on the user input
+            future = model.make_future_dataframe(periods=(pred_date - datetime.now()).days + 1, freq='D')
+            forecast = model.predict(future)
+            st.session_state['forecast'] = forecast
 
-            if pred_date > max_date:
-                st.warning(f"Extending forecast to include {user_input}.")
+            # Find the predicted price for the specific date
+            predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
+            st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
+            st.balloons()
 
-                # Ensure the Prophet model is available in session_state
-                model = st.session_state.get('prophet_model')
-                if model is None:
-                    st.error("The model is not available. Fetch the data and train the model first.")
-                else:
-                    # Calculate additional days needed
-                    additional_days = (pred_date - max_date).days
-
-                    # Extend the future dataframe by the additional days
-                    future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
-                    forecast = model.predict(future)
-                    st.session_state['forecast'] = forecast
-
-            # After extending, check if the date is now in range
-            min_date = forecast['ds'].min()
-            max_date = forecast['ds'].max()
-
-            if pred_date >= min_date and pred_date <= max_date:
-                predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
-                st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
-                st.balloons()
-            else:
-                st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {max_date.strftime('%Y-%m-%d')}")
     except ValueError:
         st.error("Please enter a valid date in the format YYYY-MM-DD.")
+    except IndexError:
+        st.error("Prediction is not available for the selected date. Please try a closer date.")
+
 
 # Custom CSS for styling
 st.markdown("""
