@@ -80,7 +80,7 @@ with st.sidebar:
     }
 
     # Internal start date (hidden from dashboard but used in the app)
-    start_date = datetime(2024, 8, 01)  # Set this as a fixed or default start date
+    start_date = datetime(2024, 8, 1)  # Set this as a fixed or default start date
 
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
 
