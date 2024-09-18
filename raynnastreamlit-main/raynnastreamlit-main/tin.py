@@ -157,10 +157,7 @@ if user_input:
         else:
             min_date = forecast['ds'].min()
             max_date = forecast['ds'].max()
-
-            # If the prediction date is outside the current forecast range
-            # If the prediction date is outside the current forecast range
-if pred_date > max_date:
+     if pred_date > max_date:
     st.warning(f"Extending forecast to include {user_input}.")
     
     # Calculate additional days needed
@@ -181,8 +178,6 @@ if pred_date >= min_date and pred_date <= max_date:
     st.balloons()
 else:
     st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {max_date.strftime('%Y-%m-%d')}")
-
-
 # Custom CSS for styling
 st.markdown("""
     <style>
