@@ -1,7 +1,3 @@
-
-
-
-
 # Import necessary libraries
 import streamlit as st
 import requests
@@ -144,16 +140,28 @@ if fetch_button:
 
     else:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
-
-
-# Predict price for a specific date
-# Predict price for a specific date
+        # Predict price for a specific date using both calendar and manual text input
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
-user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
 
+# Give users an option to either pick a date via a calendar or manually enter it
+use_calendar = st.radio("Choose input method:", ("Calendar", "Manual Entry (YYYY-MM-DD)"))
+
+if use_calendar == "Calendar":
+    user_input = st.date_input("Select the date for which you want to predict the price:", datetime.now().date())
+else:
+    user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
+
+# Process the input date for predictions
 if user_input:
     try:
-        pred_date = datetime.strptime(user_input, '%Y-%m-%d')
+        if use_calendar == "Manual Entry (YYYY-MM-DD)":
+            # If manual entry, parse the date from the input text
+            pred_date = datetime.strptime(user_input, '%Y-%m-%d').date()
+        else:
+            # If using calendar, no need to parse, use the selected date
+            pred_date = user_input
+
+        # Retrieve the forecast from session_state
         forecast = st.session_state.get('forecast')
 
         if forecast is None:
@@ -162,8 +170,8 @@ if user_input:
             min_date = forecast['ds'].min()
             max_date = forecast['ds'].max()
 
-            if pred_date > max_date:
-                st.warning(f"Extending forecast to include {user_input}.")
+            if pred_date > max_date.date():
+                st.warning(f"Extending forecast to include {pred_date}.")
 
                 # Ensure the Prophet model is available in session_state
                 model = st.session_state.get('prophet_model')
@@ -171,7 +179,7 @@ if user_input:
                     st.error("The model is not available. Fetch the data and train the model first.")
                 else:
                     # Calculate additional days needed
-                    additional_days = (pred_date - max_date).days
+                    additional_days = (pred_date - max_date.date()).days
 
                     # Extend the future dataframe by the additional days
                     future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
@@ -182,14 +190,15 @@ if user_input:
             min_date = forecast['ds'].min()
             max_date = forecast['ds'].max()
 
-            if pred_date >= min_date and pred_date <= max_date:
-                predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
-                st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
+            if min_date.date() <= pred_date <= max_date.date():
+                predicted_price = forecast[forecast['ds'] == pred_date.strftime('%Y-%m-%d')]['yhat'].values[0]
+                st.success(f"The predicted price of {metal} on {pred_date} is: ${predicted_price:.2f}")
                 st.balloons()
             else:
                 st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {max_date.strftime('%Y-%m-%d')}")
     except ValueError:
         st.error("Please enter a valid date in the format YYYY-MM-DD.")
+
 
 # Custom CSS for styling
 st.markdown("""
