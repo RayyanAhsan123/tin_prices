@@ -160,13 +160,14 @@ if user_input_date:
             current_forecast = st.session_state.get('forecast')
             max_date = current_forecast['ds'].max() if current_forecast is not None else pd.Timestamp.now()
 
+            # Calculate the additional days required beyond the current forecast
             additional_days = (pred_date - max_date).days
 
-            # If the prediction date is beyond the current forecast, extend it
             if additional_days > 0:
+                # If the prediction date is beyond the current forecast, extend the forecast
                 future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
                 forecast = model.predict(future)
-                st.session_state['forecast'] = forecast
+                st.session_state['forecast'] = forecast  # Update the session_state with the new forecast
             else:
                 forecast = current_forecast
 
