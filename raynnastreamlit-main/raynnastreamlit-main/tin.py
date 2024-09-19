@@ -76,9 +76,7 @@ with st.sidebar:
     }
     
     start_date = datetime(2024, 8, 15)  
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30)
-
-   
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))  # Corrected closing parenthesis
 
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
