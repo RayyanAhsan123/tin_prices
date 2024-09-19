@@ -76,7 +76,7 @@ with st.sidebar:
     }
     
     start_date = datetime(2024, 8, 15)  
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))  # Corrected closing parenthesis
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
@@ -143,30 +143,28 @@ if user_input_date:
     try:
         pred_date = pd.to_datetime(user_input_date)
         
+        # Assume the model is already trained after fetching data
         model = st.session_state.get('prophet_model')
-        if model is None:
-            st.error("The model is not available. Fetch the data and train the model first.")
+        current_forecast = st.session_state.get('forecast')
+        max_date = current_forecast['ds'].max() if current_forecast is not None else pd.Timestamp.now()
+
+        additional_days = (pred_date - max_date).days
+
+        if additional_days > 0:
+            future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
+            forecast = model.predict(future)
+            st.session_state['forecast'] = forecast  # Update the session_state with the new forecast
         else:
-            current_forecast = st.session_state.get('forecast')
-            max_date = current_forecast['ds'].max() if current_forecast is not None else pd.Timestamp.now()
+            forecast = current_forecast
 
-            additional_days = (pred_date - max_date).days
+        predicted_price_row = forecast[forecast['ds'] == pred_date]
 
-            if additional_days > 0:
-                future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
-                forecast = model.predict(future)
-                st.session_state['forecast'] = forecast  # Update the session_state with the new forecast
-            else:
-                forecast = current_forecast
-
-            predicted_price_row = forecast[forecast['ds'] == pred_date]
-
-            if not predicted_price_row.empty:
-                predicted_price = predicted_price_row['yhat'].values[0]
-                st.success(f"The predicted price of {metal} on {user_input_date} is: ${predicted_price:.2f}")
-                st.balloons()
-            else:
-                st.error(f"Prediction is not available for {user_input_date}. Please try a date within the model's forecast range.")
+        if not predicted_price_row.empty:
+            predicted_price = predicted_price_row['yhat'].values[0]
+            st.success(f"The predicted price of {metal} on {user_input_date} is: ${predicted_price:.2f}")
+            st.balloons()
+        else:
+            st.error(f"Prediction is not available for {user_input_date}. Please try a date within the model's forecast range.")
     
     except Exception as e:
         st.error(f"An error occurred: {e}")
