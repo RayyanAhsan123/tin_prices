@@ -141,12 +141,15 @@ if fetch_button:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
 
 # Predict price for a specific date
+# Predict price for a specific date
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
-user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
 
-if user_input:
+# Use date_input to allow the user to select a date from a calendar
+user_input_date = st.date_input("Select the date for which you want to predict the price", min_value=datetime.now().date())
+
+if user_input_date:
     try:
-        pred_date = datetime.strptime(user_input, '%Y-%m-%d')
+        pred_date = user_input_date
         
         # Ensure the Prophet model is available in session_state
         model = st.session_state.get('prophet_model')
@@ -168,17 +171,15 @@ if user_input:
                 forecast = current_forecast
 
             # Try to find the predicted price for the specific date
-            predicted_price_row = forecast[forecast['ds'] == user_input]
+            predicted_price_row = forecast[forecast['ds'] == pd.to_datetime(pred_date)]
 
             if not predicted_price_row.empty:
                 predicted_price = predicted_price_row['yhat'].values[0]
-                st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
+                st.success(f"The predicted price of {metal} on {pred_date} is: ${predicted_price:.2f}")
                 st.balloons()
             else:
-                st.error(f"Prediction is not available for {user_input}. Please try a date within the model's forecast range.")
+                st.error(f"Prediction is not available for {pred_date}. Please try a date within the model's forecast range.")
     
-    except ValueError:
-        st.error("Please enter a valid date in the format YYYY-MM-DD.")
     except Exception as e:
         st.error(f"An error occurred: {e}")
 
