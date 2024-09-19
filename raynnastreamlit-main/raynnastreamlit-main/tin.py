@@ -158,18 +158,26 @@ if user_input_date:
         else:
             # Calculate the number of additional days needed based on the user's input
             current_forecast = st.session_state.get('forecast')
-            max_date = current_forecast['ds'].max() if current_forecast is not None else pd.Timestamp.now()
+            if current_forecast is not None:
+                max_date = current_forecast['ds'].max()
+                st.write(f"Current forecast max date: {max_date}")  # Debug output for max forecast date
+            else:
+                max_date = pd.Timestamp.now()
 
-            # Calculate the additional days required beyond the current forecast
             additional_days = (pred_date - max_date).days
+            st.write(f"Additional days required: {additional_days}")  # Debug output for days to extend
 
             if additional_days > 0:
                 # If the prediction date is beyond the current forecast, extend the forecast
                 future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
+                st.write(f"Future dataframe to be predicted:\n{future.tail()}")  # Debug output for future dataframe
+
                 forecast = model.predict(future)
                 st.session_state['forecast'] = forecast  # Update the session_state with the new forecast
             else:
                 forecast = current_forecast
+
+            st.write(f"Forecast dates available:\n{forecast['ds'].tail()}")  # Debug output for forecast dates
 
             # Try to find the predicted price for the specific date
             predicted_price_row = forecast[forecast['ds'] == pred_date]
