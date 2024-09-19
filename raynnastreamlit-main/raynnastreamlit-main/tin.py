@@ -1,3 +1,7 @@
+
+
+
+
 # Import necessary libraries
 import streamlit as st
 import requests
@@ -59,14 +63,18 @@ with st.sidebar:
     st.title("Price Predictor")
     st.info("Select a prediction period to fetch data and predict future prices.")
     
+    # Use date picker to select the current date (shows the calendar)
     current_date = st.date_input("Current Date", value=datetime.now().date())
     
+    # Metal selection
     metal_symbol_map = {"TIN": "TIN", "TUNGSTEN": "TUNGSTEN"}
     metal = st.selectbox("Select Metal", ["TIN", "TUNGSTEN"])
     metal_symbol = metal_symbol_map[metal]
 
+    # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "1 Month", "3 Months", "6 Months"])
 
+    # Calculate the end date based on selected prediction period
     period_days = {
         "1 Week": 7,
         "3 Weeks": 21,
@@ -74,17 +82,21 @@ with st.sidebar:
         "3 Months": 90,
         "6 Months": 180
     }
-    
-    start_date = datetime(2024, 8, 15)  
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
+
+    # Internal start date (hidden from dashboard but used in the app)
+    start_date = datetime(2024, 8, 1)  # Set this as a fixed or default start date
+
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
+
+    # Removed the line that displays the end date
+    # st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
 
 # Main section for displaying data and results
 st.title(f"{metal} Price Prediction Dashboard")
-
-# Fetch data and model training when button is clicked
+# Prophet model training and forecasting
 if fetch_button:
     data = fetch_data(metal_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
 
@@ -121,12 +133,11 @@ if fetch_button:
         fig1 = model.plot(forecast)
         st.pyplot(fig1)
         st.session_state['forecast'] = forecast
-        
-        # ARIMA model evaluation (optional)
+      # ARIMA Model evaluation
         try:
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
             arima_result = arima_model.fit()
-            arima_forecast = arima_result.get_forecast(steps=period_days.get(prediction_period, 30))
+            arima_forecast = arima_result.get_forecast(steps=prediction_days)
             arima_pred = arima_forecast.predicted_mean
         except Exception as e:
             st.write(f"ARIMA Model Error: {e}")
@@ -134,40 +145,51 @@ if fetch_button:
     else:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
 
+
+# Predict price for a specific date
 # Predict price for a specific date
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
+user_input = st.text_input("Enter the date for which you want to predict the price (YYYY-MM-DD):")
 
-user_input_date = st.date_input("Select the date for which you want to predict the price", min_value=datetime.now().date())
-
-if user_input_date:
+if user_input:
     try:
-        pred_date = pd.to_datetime(user_input_date)
-        
-        # Assume the model is already trained after fetching data
-        model = st.session_state.get('prophet_model')
-        current_forecast = st.session_state.get('forecast')
-        max_date = current_forecast['ds'].max() if current_forecast is not None else pd.Timestamp.now()
+        pred_date = datetime.strptime(user_input, '%Y-%m-%d')
+        forecast = st.session_state.get('forecast')
 
-        additional_days = (pred_date - max_date).days
-
-        if additional_days > 0:
-            future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
-            forecast = model.predict(future)
-            st.session_state['forecast'] = forecast  # Update the session_state with the new forecast
+        if forecast is None:
+            st.error("Forecast data is not available. Fetch the data first.")
         else:
-            forecast = current_forecast
+            min_date = forecast['ds'].min()
+            max_date = forecast['ds'].max()
 
-        predicted_price_row = forecast[forecast['ds'] == pred_date]
+            if pred_date > max_date:
+                st.warning(f"Extending forecast to include {user_input}.")
 
-        if not predicted_price_row.empty:
-            predicted_price = predicted_price_row['yhat'].values[0]
-            st.success(f"The predicted price of {metal} on {user_input_date} is: ${predicted_price:.2f}")
-            st.balloons()
-        else:
-            st.error(f"Prediction is not available for {user_input_date}. Please try a date within the model's forecast range.")
-    
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+                # Ensure the Prophet model is available in session_state
+                model = st.session_state.get('prophet_model')
+                if model is None:
+                    st.error("The model is not available. Fetch the data and train the model first.")
+                else:
+                    # Calculate additional days needed
+                    additional_days = (pred_date - max_date).days
+
+                    # Extend the future dataframe by the additional days
+                    future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
+                    forecast = model.predict(future)
+                    st.session_state['forecast'] = forecast
+
+            # After extending, check if the date is now in range
+            min_date = forecast['ds'].min()
+            max_date = forecast['ds'].max()
+
+            if pred_date >= min_date and pred_date <= max_date:
+                predicted_price = forecast[forecast['ds'] == user_input]['yhat'].values[0]
+                st.success(f"The predicted price of {metal} on {user_input} is: ${predicted_price:.2f}")
+                st.balloons()
+            else:
+                st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {max_date.strftime('%Y-%m-%d')}")
+    except ValueError:
+        st.error("Please enter a valid date in the format YYYY-MM-DD.")
 
 # Custom CSS for styling
 st.markdown("""
@@ -190,4 +212,4 @@ st.markdown("""
             color: #FF6347;
         }
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
