@@ -75,8 +75,9 @@ with st.sidebar:
         "6 Months": 180
     }
 
-    end_date = datetime.now()  # End date is the current date
-    start_date = end_date - timedelta(days=period_days.get(prediction_period, 30) * 2)
+  start_date = datetime(2024, 8, 15)  
+  end_date = start_date + timedelta(days=period_days.get(prediction_period, 30)
+   
 
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
