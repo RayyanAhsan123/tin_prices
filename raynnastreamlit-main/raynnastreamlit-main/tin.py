@@ -75,7 +75,8 @@ with st.sidebar:
         "6 Months": 180
     }
 
-    start_date = datetime(2024, 8, 15)  # Set this as a fixed or default start date
+    start_date = datetime.now() - timedelta(days=365)  # One year ago
+
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 
 # Button to fetch the data
