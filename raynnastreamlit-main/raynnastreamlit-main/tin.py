@@ -141,7 +141,6 @@ if fetch_button:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
 
 # Predict price for a specific date
-# Predict price for a specific date
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
 
 # Use date_input to allow the user to select a date from a calendar
@@ -149,7 +148,8 @@ user_input_date = st.date_input("Select the date for which you want to predict t
 
 if user_input_date:
     try:
-        pred_date = user_input_date
+        # Convert user_input_date from datetime.date to pd.Timestamp for compatibility with the forecast data
+        pred_date = pd.to_datetime(user_input_date)
         
         # Ensure the Prophet model is available in session_state
         model = st.session_state.get('prophet_model')
@@ -158,7 +158,7 @@ if user_input_date:
         else:
             # Calculate the number of additional days needed based on the user's input
             current_forecast = st.session_state.get('forecast')
-            max_date = current_forecast['ds'].max() if current_forecast is not None else datetime.now()
+            max_date = current_forecast['ds'].max() if current_forecast is not None else pd.Timestamp.now()
 
             additional_days = (pred_date - max_date).days
 
@@ -171,17 +171,18 @@ if user_input_date:
                 forecast = current_forecast
 
             # Try to find the predicted price for the specific date
-            predicted_price_row = forecast[forecast['ds'] == pd.to_datetime(pred_date)]
+            predicted_price_row = forecast[forecast['ds'] == pred_date]
 
             if not predicted_price_row.empty:
                 predicted_price = predicted_price_row['yhat'].values[0]
-                st.success(f"The predicted price of {metal} on {pred_date} is: ${predicted_price:.2f}")
+                st.success(f"The predicted price of {metal} on {user_input_date} is: ${predicted_price:.2f}")
                 st.balloons()
             else:
-                st.error(f"Prediction is not available for {pred_date}. Please try a date within the model's forecast range.")
+                st.error(f"Prediction is not available for {user_input_date}. Please try a date within the model's forecast range.")
     
     except Exception as e:
         st.error(f"An error occurred: {e}")
+
 
 # Custom CSS for styling
 st.markdown("""
