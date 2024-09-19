@@ -59,18 +59,14 @@ with st.sidebar:
     st.title("Price Predictor")
     st.info("Select a prediction period to fetch data and predict future prices.")
     
-    # User input for selecting the current date (optional for display)
     current_date = st.date_input("Current Date", value=datetime.now().date())
     
-    # Metal selection
     metal_symbol_map = {"TIN": "TIN", "TUNGSTEN": "TUNGSTEN"}
     metal = st.selectbox("Select Metal", ["TIN", "TUNGSTEN"])
     metal_symbol = metal_symbol_map[metal]
 
-    # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "1 Month", "3 Months", "6 Months"])
 
-    # Calculate the end date based on selected prediction period
     period_days = {
         "1 Week": 7,
         "3 Weeks": 21,
@@ -80,8 +76,6 @@ with st.sidebar:
     }
 
     start_date = datetime(2024, 8, 15)  # Set this as a fixed or default start date
-    
-    # Calculate the end date based on the user-selected start date and prediction period
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 
 # Button to fetch the data
@@ -143,43 +137,28 @@ if fetch_button:
 # Predict price for a specific date
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
 
-# Use date_input to allow the user to select a date from a calendar
 user_input_date = st.date_input("Select the date for which you want to predict the price", min_value=datetime.now().date())
 
 if user_input_date:
     try:
-        # Convert user_input_date from datetime.date to pd.Timestamp for compatibility with the forecast data
         pred_date = pd.to_datetime(user_input_date)
         
-        # Ensure the Prophet model is available in session_state
         model = st.session_state.get('prophet_model')
         if model is None:
             st.error("The model is not available. Fetch the data and train the model first.")
         else:
-            # Calculate the number of additional days needed based on the user's input
             current_forecast = st.session_state.get('forecast')
-            if current_forecast is not None:
-                max_date = current_forecast['ds'].max()
-                st.write(f"Current forecast max date: {max_date}")  # Debug output for max forecast date
-            else:
-                max_date = pd.Timestamp.now()
+            max_date = current_forecast['ds'].max() if current_forecast is not None else pd.Timestamp.now()
 
             additional_days = (pred_date - max_date).days
-            st.write(f"Additional days required: {additional_days}")  # Debug output for days to extend
 
             if additional_days > 0:
-                # If the prediction date is beyond the current forecast, extend the forecast
                 future = model.make_future_dataframe(periods=additional_days + 1, freq='D')
-                st.write(f"Future dataframe to be predicted:\n{future.tail()}")  # Debug output for future dataframe
-
                 forecast = model.predict(future)
                 st.session_state['forecast'] = forecast  # Update the session_state with the new forecast
             else:
                 forecast = current_forecast
 
-            st.write(f"Forecast dates available:\n{forecast['ds'].tail()}")  # Debug output for forecast dates
-
-            # Try to find the predicted price for the specific date
             predicted_price_row = forecast[forecast['ds'] == pred_date]
 
             if not predicted_price_row.empty:
@@ -191,7 +170,6 @@ if user_input_date:
     
     except Exception as e:
         st.error(f"An error occurred: {e}")
-
 
 # Custom CSS for styling
 st.markdown("""
@@ -214,4 +192,4 @@ st.markdown("""
             color: #FF6347;
         }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
