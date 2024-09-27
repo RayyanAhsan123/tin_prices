@@ -67,7 +67,8 @@ with st.sidebar:
         "6 Months": 180
     }
 
-    start_date = st.date_input("Start Date", value=datetime(2024, 8, 1))  # Allow dynamic selection of start date
+    # Removed the start date from user input. Automatically set start_date
+    start_date = datetime(2024, 8, 1)  # Fixed start date
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
