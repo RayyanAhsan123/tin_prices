@@ -16,37 +16,25 @@ base_url = "https://metals-api.com/api"
 # Function to fetch data for a given metal and timeframe
 def fetch_data(symbol, start_date, end_date):
     date_format = "%Y-%m-%d"
-    start_date = datetime.strptime(start_date, date_format)
-    end_date = datetime.strptime(end_date, date_format)
+    params = {
+        "access_key": api_key,
+        "base": "USD",
+        "symbols": symbol,
+        "start_date": start_date,
+        "end_date": end_date
+    }
+    response = requests.get(f"{base_url}/timeseries", params=params)
 
-    all_data = {}
-
-    while start_date <= end_date:
-        current_end_date = min(start_date + timedelta(days=15), end_date)
-        params = {
-            "access_key": api_key,
-            "base": "USD",
-            "symbols": symbol,
-            "start_date": start_date.strftime(date_format),
-            "end_date": current_end_date.strftime(date_format)
-        }
-        response = requests.get(f"{base_url}/timeseries", params=params)
-
-        if response.status_code == 200:
-            data = response.json()
-            if data.get('success', False):
-                all_data.update(data.get("rates", {}))
-            else:
-                error_info = data.get('error', {}).get('info', 'Unknown error')
-                st.error(f"API request failed: {error_info}")
-                return None
+    if response.status_code == 200:
+        data = response.json()
+        if data.get('success', False):
+            return data.get("rates", {})
         else:
-            st.error(f"Error fetching data. Status code: {response.status_code}, Response: {response.text}")
+            st.error(f"API request failed: {data.get('error', {}).get('info', 'Unknown error')}")
             return None
-
-        start_date = current_end_date + timedelta(days=1)
-
-    return all_data if all_data else None
+    else:
+        st.error(f"Error fetching data. Status code: {response.status_code}, Response: {response.text}")
+        return None
 
 # Streamlit App Configuration
 st.set_page_config(page_title="Price Prediction", layout="wide")
@@ -79,13 +67,9 @@ with st.sidebar:
         "6 Months": 180
     }
 
-    # Internal start date (hidden from dashboard but used in the app)
-    start_date = datetime(2024, 8, 20)  # Set this as a fixed or default start date
-
+    start_date = st.date_input("Start Date", value=datetime(2024, 8, 1))  # Allow dynamic selection of start date
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
-
-    # Removed the line that displays the end date
-    # st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
+    st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
@@ -113,7 +97,7 @@ if fetch_button:
         st.subheader(f"📈 {metal} Price Over Time")
         st.line_chart(df.set_index('ds')['y'])
         
-        # Prophet model training and storing in session_state
+        # Prophet model training
         st.subheader(f"🔮 {metal} Prophet Forecast")
         model = Prophet(
             changepoint_prior_scale=0.1,
@@ -129,18 +113,22 @@ if fetch_button:
         fig1 = model.plot(forecast)
         st.pyplot(fig1)
         st.session_state['forecast'] = forecast
-      # ARIMA Model evaluation
+
+        # ARIMA Model evaluation
         try:
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
             arima_result = arima_model.fit()
-            arima_forecast = arima_result.get_forecast(steps=prediction_days)
+            arima_forecast = arima_result.get_forecast(steps=period_days.get(prediction_period, 30))
             arima_pred = arima_forecast.predicted_mean
+            st.subheader(f"🔮 ARIMA Forecast for {metal}")
+            st.write(arima_pred)
         except Exception as e:
-            st.write(f"ARIMA Model Error: {e}")
+            st.error(f"ARIMA Model Error: {e}")
 
     else:
         st.write("⚠️ No data fetched. Please check the date range or API details.")
-        # Predict price for a specific date using both calendar and manual text input
+
+# Predict price for a specific date using both calendar and manual text input
 st.subheader(f"📅 Predict {metal} Price for a Specific Date")
 
 # Give users an option to either pick a date via a calendar or manually enter it
