@@ -68,7 +68,7 @@ with st.sidebar:
     }
 
     # Removed the start date from user input. Automatically set start_date
-    start_date = datetime(2024, 8, 1)  # Fixed start date
+    start_date = datetime(2024, 8, 25)  # Fixed start date
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
     st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
 
