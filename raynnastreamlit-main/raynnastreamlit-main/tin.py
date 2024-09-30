@@ -45,7 +45,6 @@ with st.sidebar:
         "https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI",
         width=150)
     st.title("Price Predictor")
-    st.info("Select a prediction period to fetch data and predict future prices.")
     
     # Use date picker to select the current date (shows the calendar)
     current_date = st.date_input("Current Date", value=datetime.now().date())
