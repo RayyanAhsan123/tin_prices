@@ -45,6 +45,7 @@ with st.sidebar:
         "https://media.licdn.com/dms/image/v2/C560BAQGC6QNyba_n5w/company-logo_200_200/company-logo_200_200/0/1630666228337/minexx_logo?e=2147483647&v=beta&t=Edza3G0e46BmdKdBC9S-zMrVpMXLiE6_D056T3--TFI",
         width=150)
     st.title("Price Predictor")
+    st.info("Select a prediction period to fetch data and predict future prices.")
     
     # Use date picker to select the current date (shows the calendar)
     current_date = st.date_input("Current Date", value=datetime.now().date())
@@ -68,9 +69,7 @@ with st.sidebar:
 
     # Removed the start date from user input. Automatically set start_date
     start_date = datetime(2024, 8, 25)  # Fixed start date
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 15))
-    st.write(f"Prediction period will end on: {end_date.strftime('%Y-%m-%d')}")
-
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
 
