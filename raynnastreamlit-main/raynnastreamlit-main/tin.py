@@ -77,6 +77,7 @@ fetch_button = st.button(f"Fetch {metal} Data")
 # Main section for displaying data and results
 st.title(f"{metal} Price Prediction Dashboard")
 # Prophet model training and forecasting
+# Prophet model training and forecasting
 if fetch_button:
     data = fetch_data(metal_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
 
@@ -96,7 +97,7 @@ if fetch_button:
         # Plot the data
         st.subheader(f"📈 {metal} Price Over Time")
         st.line_chart(df.set_index('ds')['y'])
-        
+
         # Prophet model training
         st.subheader(f"🔮 {metal} Prophet Forecast")
         model = Prophet(
@@ -107,19 +108,24 @@ if fetch_button:
         model.fit(df)
         st.session_state['prophet_model'] = model  # Store the trained model in session_state
 
-        # Making future predictions
+        # Making future predictions based on user-selected period
         future = model.make_future_dataframe(periods=period_days.get(prediction_period, 30), freq='D')
         forecast = model.predict(future)
-        fig1 = model.plot(forecast)
-        st.pyplot(fig1)
-        st.session_state['forecast'] = forecast
 
-        # ARIMA Model evaluation
+        # Filter forecast data to match selected prediction period
+        forecast_filtered = forecast[(forecast['ds'] >= start_date) & (forecast['ds'] <= end_date)]
+
+        # Plot only the forecast relevant to the selected period
+        fig1 = model.plot(forecast_filtered)
+        st.pyplot(fig1)
+        st.session_state['forecast'] = forecast_filtered
+
+        # ARIMA Model evaluation with the same period selection
         try:
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
             arima_result = arima_model.fit()
             arima_forecast = arima_result.get_forecast(steps=period_days.get(prediction_period, 30))
-            arima_pred = arima_forecast.predicted_mean
+            arima_pred = arima_forecast.predicted_mean[:len(forecast_filtered)]  # Only show relevant period
             st.subheader(f"🔮 ARIMA Forecast for {metal}")
             st.write(arima_pred)
         except Exception as e:
@@ -185,7 +191,6 @@ if user_input:
                 st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {max_date.strftime('%Y-%m-%d')}")
     except ValueError:
         st.error("Please enter a valid date in the format YYYY-MM-DD.")
-
 
 # Custom CSS for styling
 st.markdown("""
