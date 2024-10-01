@@ -25,8 +25,13 @@ def fetch_data(symbol, start_date, end_date):
     }
     response = requests.get(f"{base_url}/timeseries", params=params)
 
+    # Log the API response for debugging
+    st.write(f"API URL: {response.url}")  # This will print the full URL used for the API call
+    st.write(f"API Status Code: {response.status_code}")  # To check if the status is correct
+
     if response.status_code == 200:
         data = response.json()
+        st.write(f"API Response Data: {data}")  # Print the raw API response to inspect it
         if data.get('success', False):
             return data.get("rates", {})
         else:
