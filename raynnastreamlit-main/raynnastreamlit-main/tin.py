@@ -180,7 +180,6 @@ if user_input:
             if min_date.date() <= pred_date <= max_date.date():
                 predicted_price = forecast[forecast['ds'] == pred_date.strftime('%Y-%m-%d')]['yhat'].values[0]
                 st.success(f"The predicted price of {metal} on {pred_date} is: ${predicted_price:.2f}")
-                st.balloons()
             else:
                 st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {max_date.strftime('%Y-%m-%d')}")
     except ValueError:
