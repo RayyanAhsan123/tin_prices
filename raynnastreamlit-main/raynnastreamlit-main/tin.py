@@ -69,7 +69,7 @@ with st.sidebar:
     }
 
     # Removed the start date from user input. Automatically set start_date
-    start_date = datetime(2024, 8, 25)  # Fixed start date
+    start_date = datetime(2024, 9, 1)  # Fixed start date
     end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
