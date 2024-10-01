@@ -55,29 +55,21 @@ with st.sidebar:
     metal = st.selectbox("Select Metal", ["TIN", "TUNGSTEN"])
     metal_symbol = metal_symbol_map[metal]
 
-    # User input for prediction period
+    # User input for prediction period - now just for display, not affecting predictions
     prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "1 Month", "3 Months", "6 Months"])
 
-    # Calculate the end date based on selected prediction period
-    period_days = {
-        "1 Week": 7,
-        "3 Weeks": 21,
-        "1 Month": 30,
-        "3 Months": 90,
-        "6 Months": 180
-    }
+# Removed the start date from user input. Automatically set start_date
+start_date = datetime(2024, 8, 25)  # Fixed start date
 
-    # Removed the start date from user input. Automatically set start_date
-    start_date = datetime(2024, 8, 25)  # Fixed start date
-    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
 
 # Main section for displaying data and results
 st.title(f"{metal} Price Prediction Dashboard")
+
 # Prophet model training and forecasting
 if fetch_button:
-    data = fetch_data(metal_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+    data = fetch_data(metal_symbol, start_date.strftime('%Y-%m-%d'), datetime.now().strftime('%Y-%m-%d'))  # Fetch until current date, no end date limit
 
     if data:
         df = pd.DataFrame.from_dict(data, orient="index")
@@ -106,8 +98,8 @@ if fetch_button:
         model.fit(df)
         st.session_state['prophet_model'] = model  # Store the trained model in session_state
 
-        # Making future predictions
-        future = model.make_future_dataframe(periods=period_days.get(prediction_period, 30), freq='D')
+        # Making future predictions without restricting end date
+        future = model.make_future_dataframe(periods=365, freq='D')  # 1 year forecast
         forecast = model.predict(future)
         fig1 = model.plot(forecast)
         st.pyplot(fig1)
@@ -117,7 +109,7 @@ if fetch_button:
         try:
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
             arima_result = arima_model.fit()
-            arima_forecast = arima_result.get_forecast(steps=period_days.get(prediction_period, 30))
+            arima_forecast = arima_result.get_forecast(steps=365)  # 1 year forecast for ARIMA
             arima_pred = arima_forecast.predicted_mean
             st.subheader(f"🔮 ARIMA Forecast for {metal}")
             st.write(arima_pred)
@@ -184,7 +176,6 @@ if user_input:
                 st.error(f"Please enter a valid date within the forecast range: {min_date.strftime('%Y-%m-%d')} to {max_date.strftime('%Y-%m-%d')}")
     except ValueError:
         st.error("Please enter a valid date in the format YYYY-MM-DD.")
-
 
 # Custom CSS for styling
 st.markdown("""
