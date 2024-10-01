@@ -96,7 +96,7 @@ if fetch_button:
             st.session_state['prophet_model'] = model  # Store the trained model in session_state
 
             # Making future predictions
-            future = model.make_future_dataframe(periods=(end_date - start_date).days, freq='D')
+            future = model.make_future_dataframe(periods=(end_date - df['ds'].max().date()).days, freq='D')
             forecast = model.predict(future)
             fig1 = model.plot(forecast)
             st.pyplot(fig1)
@@ -106,7 +106,7 @@ if fetch_button:
             try:
                 arima_model = ARIMA(df['y'], order=(5, 1, 0))
                 arima_result = arima_model.fit()
-                arima_forecast = arima_result.get_forecast(steps=(end_date - start_date).days)
+                arima_forecast = arima_result.get_forecast(steps=(end_date - df['ds'].max().date()).days)
                 arima_pred = arima_forecast.predicted_mean
                 st.subheader(f"🔮 ARIMA Forecast for {metal}")
                 st.write(arima_pred)
