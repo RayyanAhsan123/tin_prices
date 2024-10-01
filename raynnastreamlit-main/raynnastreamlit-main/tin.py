@@ -1,3 +1,4 @@
+
 # Import necessary libraries
 import streamlit as st
 import requests
@@ -25,13 +26,8 @@ def fetch_data(symbol, start_date, end_date):
     }
     response = requests.get(f"{base_url}/timeseries", params=params)
 
-    # Log the API response for debugging
-    st.write(f"API URL: {response.url}")  # This will print the full URL used for the API call
-    st.write(f"API Status Code: {response.status_code}")  # To check if the status is correct
-
     if response.status_code == 200:
         data = response.json()
-        st.write(f"API Response Data: {data}")  # Print the raw API response to inspect it
         if data.get('success', False):
             return data.get("rates", {})
         else:
@@ -60,21 +56,29 @@ with st.sidebar:
     metal = st.selectbox("Select Metal", ["TIN", "TUNGSTEN"])
     metal_symbol = metal_symbol_map[metal]
 
-    # User input for prediction period - now just for display, not affecting predictions
+    # User input for prediction period
     prediction_period = st.selectbox("Select Prediction Period", ["1 Week", "3 Weeks", "1 Month", "3 Months", "6 Months"])
 
-# Removed the start date from user input. Automatically set start_date
-start_date = datetime(2024, 8, 25)  # Fixed start date
+    # Calculate the end date based on selected prediction period
+    period_days = {
+        "1 Week": 7,
+        "3 Weeks": 21,
+        "1 Month": 30,
+        "3 Months": 90,
+        "6 Months": 180
+    }
 
+    # Removed the start date from user input. Automatically set start_date
+    start_date = datetime(2024, 8, 25)  # Fixed start date
+    end_date = start_date + timedelta(days=period_days.get(prediction_period, 30))
 # Button to fetch the data
 fetch_button = st.button(f"Fetch {metal} Data")
 
 # Main section for displaying data and results
 st.title(f"{metal} Price Prediction Dashboard")
-
 # Prophet model training and forecasting
 if fetch_button:
-    data = fetch_data(metal_symbol, start_date.strftime('%Y-%m-%d'), datetime.now().strftime('%Y-%m-%d'))  # Fetch until current date, no end date limit
+    data = fetch_data(metal_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
 
     if data:
         df = pd.DataFrame.from_dict(data, orient="index")
@@ -103,8 +107,8 @@ if fetch_button:
         model.fit(df)
         st.session_state['prophet_model'] = model  # Store the trained model in session_state
 
-        # Making future predictions without restricting end date
-        future = model.make_future_dataframe(periods=365, freq='D')  # 1 year forecast
+        # Making future predictions
+        future = model.make_future_dataframe(periods=period_days.get(prediction_period, 30), freq='D')
         forecast = model.predict(future)
         fig1 = model.plot(forecast)
         st.pyplot(fig1)
@@ -114,7 +118,7 @@ if fetch_button:
         try:
             arima_model = ARIMA(df['y'], order=(5, 1, 0))
             arima_result = arima_model.fit()
-            arima_forecast = arima_result.get_forecast(steps=365)  # 1 year forecast for ARIMA
+            arima_forecast = arima_result.get_forecast(steps=period_days.get(prediction_period, 30))
             arima_pred = arima_forecast.predicted_mean
             st.subheader(f"🔮 ARIMA Forecast for {metal}")
             st.write(arima_pred)
@@ -182,6 +186,7 @@ if user_input:
     except ValueError:
         st.error("Please enter a valid date in the format YYYY-MM-DD.")
 
+
 # Custom CSS for styling
 st.markdown("""
     <style>
@@ -204,3 +209,4 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
+
