@@ -165,8 +165,7 @@ if user_input:
             max_date = forecast['ds'].max()
 
             if pred_date > max_date.date():
-                st.warning(f"Extending forecast to include {pred_date}.")
-
+              
                 # Ensure the Prophet model is available in session_state
                 model = st.session_state.get('prophet_model')
                 if model is None:
